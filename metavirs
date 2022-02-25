@@ -66,9 +66,6 @@ def unlock(sub_args):
     @param sub_args <parser.parse_args() object>:
         Parsed arguments for unlock sub-command
     """
-    print(sub_args)
-    fatal('NotImplementedError... Comming Soon!')
-
     print("Unlocking the pipeline's output directory...")
     outdir = sub_args.output
 
