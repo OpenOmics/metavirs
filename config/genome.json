@@ -1,4 +1,5 @@
 {
     "references": {
+        "adapters": "ref/TruSeq_and_nextera_adapters.fa"
     }
 }
