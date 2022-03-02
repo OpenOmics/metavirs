@@ -1,24 +1,85 @@
 # Python standard library
 from os.path import join
 from os import listdir
-import os, sys
+import os, sys, json
 
 # 3rd party imports from pypi
 from snakemake.workflow import workflow as wf_api
-from snakemake.utils import R
 
 # Local imports
 from scripts.common import (
     provided, 
-    references
+    references,
+    allocated
 )
 
+# Global workflow variables
+configfile: 'config.json' 
+samples  = config['samples']              # Base name of input samples
+workpath = config['project']['workpath']  # Pipeline's output directory
+filetype = config['project']['filetype']  # 'paired-end' or 'single-end' (not supported)
+tmpdir = config['options']['tmp_dir']     # Temporary directory
 
-# Final ouput files of the pipeline
+# Read in resource information,
+# containing information about 
+# threads, mem, walltimes, etc.
+# TODO: Add handler for when the
+# mode is set to local.
+with open(join('config', 'cluster.json')) as fh:
+    cluster = json.load(fh)
+
+print(cluster)
+
+# Imported rules
+include: join("rules", "common.smk")
+include: join("rules", "paired-end.smk")
+
+# Targets of the pipeline to build the DAG,
+# assumes the user provided paired-end data.
 rule all:
     input:
-        []
+        # FastQValidator, only runs if Snakemake is 
+        # invoked with the --use-singularity option
+        # @imported from rules/paired-end.smk
+        expand(
+            join(workpath,"rawQC","{name}.validated.R1.fastq.log"), 
+            name=provided(samples, wf_api.use_singularity)
+        ),
+        expand(
+            join(workpath,"rawQC","{name}.validated.R2.fastq.log"), 
+            name=provided(samples, wf_api.use_singularity)
+        ),
+        # Extract Flowcell Lane information
+        # @imported from rules/common.smk
+        expand(
+            join(workpath,"rawQC","{name}.fastq.info.txt"), 
+            name=samples
+        ),
+        # FastQC (before and after trimming)
+        # @imported from rules/paired-end.smk
+        expand(
+            join(workpath,"rawQC","{name}.R1_fastqc.zip"), 
+            name=samples
+        ),
+        expand(
+            join(workpath,"rawQC","{name}.R2_fastqc.zip"), 
+            name=samples
+        ),
+        expand(
+            join(workpath,"QC","{name}.R1.trim_fastqc.zip"), 
+            name=samples
+        ),
+        expand(join(workpath,"QC","{name}.R2.trim_fastqc.zip"), 
+        name=samples
+        ),
+        # Cutadapt, remove adapter sequences
+        # @imported from rules/paired-end.smk
+        expand(
+            join(workpath,"trim","{name}.R1.trim.fastq"), 
+            name=samples
+        ),
+        expand(
+            join(workpath,"trim","{name}.R2.trim.fastq"), 
+            name=samples
+        ),
 
-
-# Import rules 
-include: join("rules", "common.smk")
