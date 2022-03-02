@@ -4,5 +4,30 @@
         "mem": "8g",
         "partition": "norm",
         "time": "0-04:00:00"
-    }
+    },
+	"fastqc": {
+        "threads": "16",
+		"mem": "32g",
+		"time": "0-18:00:00"
+	},
+	"fastq_screen": {
+        "threads": "16",
+		"mem": "32g",
+		"time": "0-18:00:00"
+	},
+	"kraken": {
+		"threads": "16",
+		"mem": "64g",
+        "time": "0-18:00:00"
+	},
+	"rawfastqc": {
+        "threads": "16",
+		"mem": "32g",
+		"time": "0-18:00:00"
+	},
+	"trim": {
+        "threads": "16",
+		"mem": "32g",
+        "time": "1-00:00:00"
+	}
 }
