@@ -601,11 +601,14 @@ def dryrun(outdir, config='config.json', snakefile=os.path.join('workflow', 'Sna
         Byte string representation of dryrun command
     """
     try:
+        # Setting cores to dummy high number so
+        # displays the true number of cores a rule
+        # will use, it uses the min(--cores CORES, N)
         dryrun_output = subprocess.check_output([
             'snakemake', '-npr',
             '-s', str(snakefile),
             '--use-singularity',
-            '--cores', str(1),
+            '--cores', str(256),
             '--configfile={}'.format(config)
         ], cwd = outdir,
         stderr=subprocess.STDOUT)
