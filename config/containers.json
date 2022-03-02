@@ -1,4 +1,12 @@
 {
     "images": {
+        "cutadapt": "/data/NCBR/dev/SIFs/ccbr_cutadapt_1.18_v032219.sif",
+        "fastq_screen": "/data/NCBR/dev/SIFs/ccbr_fastq_screen_0.13.0_v2.0.sif",
+        "fastqc": "/data/NCBR/dev/SIFs/ccbr_fastqc_0.11.9_v1.1.sif",
+        "fastqvalidator": "/data/NCBR/dev/SIFs/ccbr_fastqvalidator_v0.1.0.sif",
+        "kraken": "/data/NCBR/dev/SIFs/ccbr_kraken_v2.1.1_v0.0.1.sif",
+        "metaquast": "/data/NCBR/dev/SIFs/quast_5.0.2--py27pl526ha92aebf_0.sif",
+        "multiqc": "/data/NCBR/dev/SIFs/ccbr_multiqc_1.9_v0.0.1.sif",
+        "python": "/data/NCBR/dev/SIFs/ccbr_python_v0.0.1.sif"
     }
 }
