@@ -148,7 +148,7 @@ def allocated(resource, rule, lookup, default="__default__"):
         # Use default allocation information
         allocation = lookup[default][resource]
     
-    return int(allocation)
+    return allocation
 
 
 
