@@ -608,6 +608,7 @@ def dryrun(outdir, config='config.json', snakefile=os.path.join('workflow', 'Sna
             'snakemake', '-npr',
             '-s', str(snakefile),
             '--use-singularity',
+            '--rerun-incomplete',
             '--cores', str(256),
             '--configfile={}'.format(config)
         ], cwd = outdir,
@@ -630,7 +631,7 @@ def dryrun(outdir, config='config.json', snakefile=os.path.join('workflow', 'Sna
 
 
 def runner(mode, outdir, alt_cache, logger, additional_bind_paths = None, 
-    threads=2,  jobname='pl:exome-seek', submission_script='runner',
+    threads=2,  jobname='pl:master', submission_script='runner',
     tmp_dir = '/lscratch/$SLURM_JOBID/'):
     """Runs the pipeline via selected executor: local or slurm.
     If 'local' is selected, the pipeline is executed locally on a compute node/instance.
