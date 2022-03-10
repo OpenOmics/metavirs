@@ -16,6 +16,6 @@
         "ucsc": "ucsc/418"
     },
     "conda": {
-        "metscale": ""
+        "CAT": "workflow/envs/cat.yaml"
     }
 }
