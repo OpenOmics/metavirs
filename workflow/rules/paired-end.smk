@@ -38,22 +38,22 @@ rule rawfastqc:
     adapter sequences. FastQC generates a set of basic statistics to identify problems
     that can arise during sequencing or library preparation.
     @Input:
-        List of Raw FastQ files (gather)
+        Raw FastQ file (scatter)
     @Output:
-        List of FastQC reports and zip file containing data quality information
+        FastQC report and zip file containing data quality information
     """
     input:
-        expand(join(workpath,"{name}.R1.fastq.gz"), name=samples),
-        expand(join(workpath,"{name}.R2.fastq.gz"), name=samples),
+        join(workpath,"{name}.R1.fastq.gz"),
+        join(workpath,"{name}.R2.fastq.gz"),
     output:
-        expand(join(workpath,"rawQC","{name}.R1_fastqc.zip"), name=samples),
-        expand(join(workpath,"rawQC","{name}.R2_fastqc.zip"), name=samples),
+        join(workpath,"rawQC","{name}.R1_fastqc.zip"),
+        join(workpath,"rawQC","{name}.R2_fastqc.zip"),
     params:
         rname='rawfqc',
         outdir=join(workpath,"rawQC"),
     threads: int(allocated("threads", "rawfastqc", cluster))
     envmodules: config['tools']['fastqc']
-    container: config['images']['fastqc']
+    # container: config['images']['fastqc']
     shell: """
     fastqc {input} \\
         -t {threads} \\
@@ -83,7 +83,7 @@ rule trim:
         adapters=config['references']['adapters'],
     threads: int(allocated("threads", "trim", cluster))
     envmodules: config['tools']['cutadapt']
-    container: config['images']['cutadapt']
+    # container: config['images']['cutadapt']
     shell: """
     cutadapt -j {threads} \\
         --pair-filter=any \\
@@ -105,24 +105,227 @@ rule fastqc:
     adapter sequences. This step is run after trim_pe rule. FastQC is run after adapter
     trimming to evalute if the adapter sequences were properly removed.
     @Input:
-        List of Trimmed FastQ files (gather)
+        Trimmed FastQ file (scatter)
     @Output:
-        List of FastQC reports and zip file containing data quality information
+        FastQC report and zip file containing data quality information
     """
     input:
-        expand(join(workpath,"trim","{name}.R1.trim.fastq"), name=samples),
-        expand(join(workpath,"trim","{name}.R2.trim.fastq"), name=samples),
+        join(workpath,"trim","{name}.R1.trim.fastq"),
+        join(workpath,"trim","{name}.R2.trim.fastq"),
     output:
-        expand(join(workpath,"QC","{name}.R1.trim_fastqc.zip"), name=samples),
-        expand(join(workpath,"QC","{name}.R2.trim_fastqc.zip"), name=samples),
+        join(workpath,"QC","{name}.R1.trim_fastqc.zip"),
+        join(workpath,"QC","{name}.R2.trim_fastqc.zip"),
     params:
         rname='fqc',
         outdir=join(workpath,"QC"),
     threads: int(allocated("threads", "fastqc", cluster))
     envmodules: config['tools']['fastqc']
-    container: config['images']['fastqc']
+    # container: config['images']['fastqc']
     shell: """
     fastqc {input} \\
         -t {threads} \\
         -o {params.outdir}
+    """
+
+
+rule remove_host:
+    """
+    Data-processing step to remove any sources of contamination from host. Reads
+    are aligned against a host bowtie2 index. Any reads that align against the 
+    host reference genome are then removed from the trimmed FastQ files. 
+    @Input:
+        Trimmed FastQ file (scatter)
+    @Output:
+        Trimmed, host remove FastQ file
+    """
+    input:
+        r1=join(workpath,"trim","{name}.R1.trim.fastq"),
+        r2=join(workpath,"trim","{name}.R2.trim.fastq"),
+    output:
+        sam=temp(join(workpath,"temp","{name}.host_contaminated.sam")),
+        bam=temp(join(workpath,"temp","{name}.host_contaminated.bam")),
+        sorted_bam=temp(join(workpath,"temp","{name}.host_contaminated.sorted.bam")),
+        r1=join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"),
+        r2=join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"),
+    params:
+        rname='rmhost',
+        host_index=join(config['references']['host_bowtie2_index'], 'Hosts')
+    threads: int(allocated("threads", "remove_host", cluster))
+    envmodules: 
+        config['tools']['bowtie'],
+        config['tools']['samtools']
+    shell: """
+    # Align against host to remove contamination
+    bowtie2 -p {threads} \\
+        -x {params.host_index} \\
+        -1 {input.r1} \\
+        -2 {input.r2} \\
+        -S {output.sam}
+    samtools view -@ {threads} \\
+        -bS -f 12 -F 256 \\
+        {output.sam} > {output.bam}
+    samtools sort -n -@ {threads} \\
+        {output.bam} \\
+        -o {output.sorted_bam}
+    samtools fastq -@ {threads} \\
+        {output.sorted_bam} \\
+        -1 {output.r1} \\
+        -2 {output.r2} \\
+        -0 /dev/null -s /dev/null -n
+    """
+
+
+rule kraken_viral:
+    """
+    Data-processing step for taxonomic classification of microbes. Kraken2
+    uses exact k-mer matches to achieve high accuracy and fast classification
+    speeds. This classifier matches each k-mer within a query sequence to the
+    lowest common ancestor (LCA) of all genomes containing the given k-mer. 
+    @Input:
+        Trimmed, host remove FastQ file (scatter)
+    @Output:
+        Taxonomic classification of trimmed, host remove reads
+    """
+    input:
+        r1=join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"),
+        r2=join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"),
+    output:
+        report=join(workpath,"info","{name}.reads_kraken2_report.txt"),
+        k2txt=join(workpath,"kraken2","{name}.reads.kraken2"),
+        kronatxt=join(workpath,"kraken2","{name}.reads.kraken2.krona"),
+        html=join(workpath,"kraken2","{name}.reads.krona.html"),
+    params:
+        rname='krakenviral',
+        viral_db=config['references']['kraken2_viral_db'],
+        krona_ref=config['references']['kronatools'],
+    threads: int(allocated("threads", "kraken_viral", cluster))
+    envmodules: 
+        config['tools']['kraken'],
+        config['tools']['kronatools']
+    shell: """
+    # Run kraken against viral database
+    kraken2 --threads {threads} \\
+        --db {params.viral_db} \\
+        --paired {input.r1} {input.r2} \\
+        --report {output.report} \\
+        > {output.k2txt}
+    awk -v OFS='\\t' '{{if ($1 == "C") print $2,$3}}' {output.k2txt} \\
+        > {output.kronatxt}
+    ktImportTaxonomy \\
+        -tax {params.krona_ref} \\
+        -o {output.html} \\
+        {output.kronatxt}
+    """
+
+
+rule metaspades:
+    """
+    Data-processing step to assembly reads for metagenomic analysis. 
+    @Input:
+        Trimmed, host remove FastQ file (scatter)
+    @Output:
+        Kraken report and annotation report of assembled contigs,
+        and aligned reads against the assembled contigs. 
+    """
+    input:
+        r1=join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"),
+        r2=join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"),
+    output:
+        contigs=join(workpath,"output","{name}","{name}.metaspades.contigs.fa"),
+        report=join(workpath,"info","{name}.metaspades.contigs_kraken2_report.txt"),
+        k2txt=join(workpath,"kraken2","{name}.metaspades.contigs.kraken2"),
+        krona=join(workpath,"kraken2","{name}.metaspades.contigs.kraken2.krona"),
+        tmp1=join(workpath,"temp","{name}","{name}.metaspades_kraken2.txt"),
+        cat_class=join(workpath,"CAT","{name}.metaspades.contig2classification.txt"),
+        cat_names=join(workpath,"CAT","{name}.metaspades.official_names.txt"),
+        cat_summary=join(workpath,"CAT","{name}.metaspades.summary.txt"),
+        taxids=join(workpath,"CAT","{name}.metaspades.contig_taxids.txt"),
+        tmp2=join(workpath,"temp","{name}","{name}.metaspades_CAT.txt"),
+        tmp3=join(workpath,"temp","{name}","{name}.metaspades.kraken2.viral.names.txt"),
+        kraken_contigs=join(workpath,"output","{name}","{name}.metaspades.kraken2_viral.contigs.fa"),
+        tmp4=join(workpath,"temp","{name}","{name}.metaspades.CAT.viral.names.txt"),
+        cat_contigs=join(workpath,"output","{name}","{name}.metaspades.cat_viral.contigs.fa"),
+        sam=temp(join(workpath,"temp","{name}.metaspades.sam")),
+        bam=temp(join(workpath,"temp","{name}.metaspades.bam")),
+        final=join(workpath,"output","{name}","{name}.metaspades.bam"),        
+    params:
+        rname='metaspades',
+        viral_db=config['references']['kraken2_viral_db'],
+        cat_db=config['references']['CAT_db'],
+        cat_tax=config['references']['CAT_taxonomy'],
+        cat_dep=config['references']['CAT_diamond'],
+        cat_dir=join(workpath,"CAT"),
+    threads: int(allocated("threads", "metaspades", cluster))
+    conda: config['conda']['CAT']
+    envmodules: 
+        config['tools']['spades'],
+        config['tools']['kraken'],
+        config['tools']['kronatools'],
+        config['tools']['seqtk'],
+        config['tools']['bowtie'],
+        config['tools']['samtools']
+    shell: """
+    mkdir -p {wildcards.name}/metaspades
+    metaspades.py -t {threads} \\
+        -m 240 \\
+        -1 {input.r1} \\
+        -2 {input.r2} \\
+        -o {wildcards.name}/metaspades
+    mv {wildcards.name}/metaspades/contigs.fasta {output.contigs}
+
+    kraken2  --threads {threads} \\
+        --db {params.viral_db} {output.contigs} \\
+        --report {output.report} \\
+        > {output.k2txt}
+    awk -v OFS='\\t' '{{split($2,a,"_"); if ($1 == "C") print $2,$3,a[6]}}' \\
+        {output.k2txt} > {output.krona}
+    cp {output.krona} {output.tmp1}
+
+    CAT contigs -n {threads} \\
+        -c {output.contigs} \\
+        -d {params.cat_db} \\
+        -t {params.cat_tax} \\
+        --out_prefix {params.cat_dir}/{wildcards.name}.metaspades \\
+        --path_to_diamond {params.cat_dep}
+    CAT add_names -i {output.cat_class} \\
+        -o {output.cat_names} \\
+        -t {params.cat_tax} \\
+        --only_official
+    CAT summarise \\
+        -c {output.contigs} \\
+        -i {output.cat_names} \\
+        -o {output.cat_summary}
+    grep "Viruses:" {output.cat_names} \\
+        | awk -v OFS='\\t' '{{split($8,a,";"); split(a[split($8,a,";")],b,"*"); split($1,c,"_"); print $1,b[1],c[6]}}' \\
+        > {output.taxids}
+    cp {output.taxids} {output.tmp2}
+
+    cut -f1 {output.krona} > {output.tmp3}
+    seqtk subseq \\
+        {output.contigs} \\
+        {output.tmp3} \\
+        > {output.kraken_contigs}
+    cut -f1 {output.taxids} > {output.tmp4}
+    seqtk subseq \\
+        {output.contigs} \\
+        {output.tmp4} \\
+        > {output.cat_contigs}
+
+    bowtie2-build \\
+        {output.contigs} \\
+        temp/{wildcards.name}/{wildcards.name}_metaspades
+    bowtie2 -p {threads} \\
+        -x temp/{wildcards.name}/{wildcards.name}_metaspades \\
+        -1 {input.r1} \\
+        -2 {input.r2} \\
+        -S {output.sam}
+    
+    samtools view -@ 32 \\
+        -bS {output.sam} > {output.bam} 
+    samtools sort \\
+        -@ 32 \\
+        {output.bam}  \\
+        -o {output.final}
+    samtools index \\
+        -@ 32 {output.final}
     """

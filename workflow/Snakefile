@@ -82,4 +82,25 @@ rule all:
             join(workpath,"trim","{name}.R2.trim.fastq"), 
             name=samples
         ),
-
+        # Remove Host contamination
+        # @imported from rules/paired-end.smk
+        expand(
+            join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"), 
+            name=samples
+        ),
+        expand(
+            join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"), 
+            name=samples
+        ),
+        # Kraken2, viral taxonomic classification
+        # @imported from rules/paired-end.smk
+        expand(
+            join(workpath,"kraken2","{name}.reads.krona.html"), 
+            name=samples
+        ),
+        # Metaspades, viral assembly, annotation, and alignment to contigs
+        # @imported from rules/paired-end.smk
+        expand(
+            join(workpath,"output","{name}","{name}.metaspades.bam"), 
+            name=samples
+        )
