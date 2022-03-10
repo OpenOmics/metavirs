@@ -1,0 +1,41 @@
+name: CAT
+channels:
+  - bioconda
+  - conda-forge
+  - r
+  - asdffdsauiui
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=1_gnu
+  - boost-cpp=1.74.0=h6cacc03_7
+  - bzip2=1.0.8=h7f98852_4
+  - ca-certificates=2021.10.8=ha878542_0
+  - cat=5.2.3=hdfd78af_1
+  - diamond=2.0.14=hb97b32f_1
+  - icu=69.1=h9c3ff4c_0
+  - ld_impl_linux-64=2.36.1=hea4e1c9_2
+  - libffi=3.4.2=h7f98852_5
+  - libgcc-ng=11.2.0=h1d223b6_13
+  - libgomp=11.2.0=h1d223b6_13
+  - libnsl=2.0.0=h7f98852_0
+  - libstdcxx-ng=11.2.0=he4da1e4_13
+  - libuuid=2.32.1=h7f98852_1000
+  - libzlib=1.2.11=h36c2ea0_1013
+  - lz4-c=1.9.3=h9c3ff4c_1
+  - ncurses=6.3=h9c3ff4c_0
+  - openssl=3.0.0=h7f98852_2
+  - pip=22.0.4=pyhd8ed1ab_0
+  - prodigal=2.6.3=hec16e2b_4
+  - python=3.10.2=hc74c709_4_cpython
+  - python_abi=3.10=2_cp310
+  - readline=8.1=h46c0cb4_0
+  - sqlite=3.37.0=h9cd32fc_0
+  - tk=8.6.12=h27826a3_0
+  - tzdata=2021e=he74cb21_0
+  - wheel=0.37.1=pyhd8ed1ab_0
+  - xz=5.2.5=h516909a_1
+  - zlib=1.2.11=h36c2ea0_1013
+  - zstd=1.5.2=ha95c52a_0
+  - pip:
+    - setuptools==60.9.3
