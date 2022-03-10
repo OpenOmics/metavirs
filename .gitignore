@@ -159,3 +159,6 @@ site/
 
 # GNU Parallel
 .parallel/
+
+# Notes
+NOTES.txt
