@@ -16,6 +16,6 @@
         "ucsc": "ucsc/418"
     },
     "conda": {
-        "CAT": "workflow/envs/cat.yaml"
+        "CAT": "../envs/cat.yaml"
     }
 }
