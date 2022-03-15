@@ -39,5 +39,25 @@
         "threads": "32",
         "mem": "64g",
         "time": "0-18:00:00"
+    },
+    "megahit": {
+        "threads": "32",
+        "mem": "64g",
+        "time": "0-18:00:00"
+    },
+    "krona": {
+        "threads": "2",
+        "mem": "32g",
+        "time": "0-18:00:00"
+    },
+    "prep_metaquast": {
+        "threads": "4",
+        "mem": "16g",
+        "time": "0-18:00:00"
+    },
+    "metaquast": {
+        "threads": "32",
+        "mem": "64g",
+        "time": "0-18:00:00"
     }
 }
