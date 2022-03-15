@@ -6,6 +6,7 @@
         "kronatools": "/data/NCBR/references/metavirs/kronatax_0921/",
         "CAT_db": "/data/NCBR/references/metavirs/CAT_prepare_20210107/2021-01-07_CAT_database",
         "CAT_taxonomy": "/data/NCBR/references/metavirs/CAT_prepare_20210107/2021-01-07_taxonomy",
-        "CAT_diamond": "/data/NCBR/references/metavirs/CAT_prepare_20210107/Diamond_2.0.6/diamond"
+        "CAT_diamond": "/data/NCBR/references/metavirs/CAT_prepare_20210107/Diamond_2.0.6/diamond",
+        "ncbi_viral_fasta": "/data/NCBR/references/metavirs/ncbi/viral_oneline.fa"
     }
 }
