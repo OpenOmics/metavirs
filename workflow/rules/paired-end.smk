@@ -296,7 +296,9 @@ rule metaspades:
         -i {output.cat_names} \\
         -o {output.cat_summary}
     grep "Viruses:" {output.cat_names} \\
-        | awk -v OFS='\\t' '{{split($8,a,";"); split(a[split($8,a,";")],b,"*"); split($1,c,"_"); print $1,b[1],c[6]}}' \\
+        | awk -v OFS='\\t' '{{split($8,a,";"); \\
+            split(a[split($8,a,";")],b,"*"); \\
+            split($1,c,"_"); print $1,b[1],c[6]}}' \\
         > {output.taxids}
     cp {output.taxids} {output.tmp2}
 
@@ -311,11 +313,129 @@ rule metaspades:
         {output.tmp4} \\
         > {output.cat_contigs}
 
-    bowtie2-build \\
+    bowtie2-build --threads {threads} \\
         {output.contigs} \\
         temp/{wildcards.name}/{wildcards.name}_metaspades
     bowtie2 -p {threads} \\
         -x temp/{wildcards.name}/{wildcards.name}_metaspades \\
+        -1 {input.r1} \\
+        -2 {input.r2} \\
+        -S {output.sam}
+    
+    samtools view -@ {threads} \\
+        -bS {output.sam} > {output.bam} 
+    samtools sort \\
+        -@ {threads} \\
+        {output.bam}  \\
+        -o {output.final}
+    samtools index \\
+        -@ {threads} {output.final}
+    """
+
+
+rule megahit:
+    """
+    Data-processing step to assembly reads for metagenomic analysis. 
+    @Input:
+        Trimmed, host remove FastQ file (scatter)
+    @Output:
+        Kraken report and annotation report of assembled contigs,
+        and aligned reads against the assembled megahit contigs. 
+    """
+    input:
+        r1=join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"),
+        r2=join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"),
+    output:
+        contigs=join(workpath,"output","{name}","{name}.megahit.contigs.fa"),
+        report=join(workpath,"info","{name}.megahit.contigs_kraken2_report.txt"),
+        k2txt=join(workpath,"kraken2","{name}.megahit.contigs.kraken2"),
+        krona=join(workpath,"kraken2","{name}.megahit.contigs.kraken2.krona"),
+        tmp1=join(workpath,"temp","{name}","{name}.megahit_kraken2.txt"),
+        cat_class=join(workpath,"CAT","{name}.megahit.contig2classification.txt"),
+        cat_names=join(workpath,"CAT","{name}.megahit.official_names.txt"),
+        cat_summary=join(workpath,"CAT","{name}.megahit.summary.txt"),
+        taxids=join(workpath,"CAT","{name}.megahit.contig_taxids.txt"),
+        tmp2=join(workpath,"temp","{name}","{name}.megahit_CAT.txt"),
+        tmp3=join(workpath,"temp","{name}","{name}.megahit.kraken2.viral.names.txt"),
+        kraken_contigs=join(workpath,"output","{name}","{name}.megahit.kraken2_viral.contigs.fa"),
+        tmp4=join(workpath,"temp","{name}","{name}.megahit.CAT.viral.names.txt"),
+        cat_contigs=join(workpath,"output","{name}","{name}.megahit.cat_viral.contigs.fa"),
+        sam=temp(join(workpath,"temp","{name}.megahit.sam")),
+        bam=temp(join(workpath,"temp","{name}.megahit.bam")),
+        final=join(workpath,"output","{name}","{name}.megahit.bam"),  
+    params:
+        rname='megahit',
+        viral_db=config['references']['kraken2_viral_db'],
+            cat_db=config['references']['CAT_db'],
+        cat_tax=config['references']['CAT_taxonomy'],
+        cat_dep=config['references']['CAT_diamond'],
+        cat_dir=join(workpath,"CAT")
+    threads: int(allocated("threads", "megahit", cluster))
+    conda: config['conda']['CAT']
+    envmodules: 
+        config['tools']['megahit'],
+        config['tools']['kraken'],
+        config['tools']['kronatools'],
+        config['tools']['seqtk'],
+        config['tools']['bowtie'],
+        config['tools']['samtools']
+    shell: """
+    mkdir -p {wildcards.name}/megahit
+    megahit -t {threads} \\
+        -1 {input.r1} \\
+        -2 {input.r2} \\
+        --out-prefix=megahit \\
+        -o {wildcards.name}/megahit
+    tr ' ' '_' < {wildcards.name}/megahit/megahit.contigs.fa > {output.contigs}
+
+    kraken2  --threads {threads} \\
+        --db {params.viral_db} {output.contigs} \\
+        --report {output.report} \\
+        > {output.k2txt}
+
+    awk -v OFS='\\t' '{{split($2,a,"_"); \\
+        split(a[4],b,"="); if ($1 == "C") print $2,$3,b[2]}}' \\
+        {output.k2txt} > {output.krona}
+    cp {output.krona} {output.tmp1}
+
+    CAT contigs -n {threads} \\
+        -c {output.contigs} \\
+        -d {params.cat_db} \\
+        -t {params.cat_tax} \\
+        --out_prefix {params.cat_dir}/{wildcards.name}.megahit \\
+        --path_to_diamond {params.cat_dep}
+    CAT add_names -i {output.cat_class} \\
+        -o {output.cat_names} \\
+        -t {params.cat_tax} \\
+        --only_official
+    CAT summarise \\
+        -c {output.contigs} \\
+        -i {output.cat_names} \\
+        -o {output.cat_summary}
+    grep "Viruses:" {output.cat_names} \\
+        | awk -v OFS='\\t' '{{split($8,a,";"); \\
+            split(a[split($8,a,";")],b,"*"); \\
+            split($1,c,"_"); split(c[4],d,"="); \\
+            print $1,b[1],d[2]}}' \\
+        > {output.taxids}
+    cp {output.taxids} {output.tmp2}
+
+    cut -f1 {output.krona} > {output.tmp3}
+    seqtk subseq \\
+        {output.contigs} \\
+        {output.tmp3} \\
+        > {output.kraken_contigs}
+    cut -f1 {output.taxids} > {output.tmp4}
+    seqtk subseq \\
+        {output.contigs} \\
+        {output.tmp4} \\
+        > {output.cat_contigs}
+
+    bowtie2-build --threads {threads} \\
+        {output.contigs} \\
+        temp/{wildcards.name}/{wildcards.name}_megahit
+    bowtie2 -p {threads} \\
+        -x temp/{wildcards.name}/{wildcards.name}_megahit \\
         -1 {input.r1} \\
         -2 {input.r2} \\
         -S {output.sam}
@@ -328,4 +448,122 @@ rule metaspades:
         -o {output.final}
     samtools index \\
         -@ 32 {output.final}
+    """
+
+
+rule krona:
+    """
+    Reporting step to create a interactive Krona charts based on
+    the annotated assembled contigs from the product of of multiple
+    assemblers (metaspades and megahit) and annotation tools (CAT and 
+    kraken2).
+    @Input:
+        Annotated contigs from metaspades and megahit (gather per-sample)
+    @Output:
+        Interactive Krona report for a sample. 
+    """
+    input:
+        f1=join(workpath,"temp","{name}","{name}.metaspades_CAT.txt"),
+        f2=join(workpath,"temp","{name}","{name}.metaspades_kraken2.txt"),
+        f3=join(workpath,"temp","{name}","{name}.megahit_CAT.txt"),
+        f4=join(workpath,"temp","{name}","{name}.megahit_kraken2.txt"),
+    output:
+        report=join(workpath,"output","{name}","{name}.contig.classification.html"),
+    params:
+        rname='krona',
+        krona_ref=config['references']['kronatools'],
+    threads: int(allocated("threads", "krona", cluster))
+    envmodules:
+        config['tools']['kraken'],
+        config['tools']['kronatools'],
+    shell: """
+    ktImportTaxonomy \\
+        -tax {params.krona_ref} \\
+        -m 3 \\
+        -o {output.report} \\
+        {input.f1} \\
+        {input.f2} \\
+        {input.f3} \\
+        {input.f4}
+    """
+
+
+rule prep_metaquast:
+    """
+    Data-processing step to prep input for quast. This rule must 
+    be logically seperated from metaquast due to the UCSC tool
+    dependency. 
+    TODO: merge prep_metaquast and metaquast rules together once 
+    a docker image has been built with all dependencies.
+    @Input:
+        Trimmed, host remove FastQ file (scatter)
+    @Output:
+        Kraken report and annotation report of assembled contigs,
+        and aligned reads against the assembled megahit contigs. 
+    """
+    input:
+        report=join(workpath,"info","{name}.reads_kraken2_report.txt"),
+    output:
+        txt=join(workpath,"temp","{name}","{name}_reads_class_names.txt"),
+        fa=join(workpath,"temp","{name}","{name}.metaquast.fa"),
+    params:
+        rname='prepmetaq',
+        ncbi_viral=config['references']['ncbi_viral_fasta'],
+        outdir=join(workpath,"temp","{name}","metaquastref"),
+    threads: int(allocated("threads", "prep_metaquast", cluster))
+    envmodules:
+        config['tools']['ucsc']
+    shell: """
+    awk -F '\\t' '{{if ($4 ~ "S") print $6}}' \\
+        {input.report} \\
+        | sed 's/^ *//g' \\
+        | sort \\
+        | uniq \\
+        | tr ' ' '_' \\
+        > {output.txt}
+    
+    paste - - < {params.ncbi_viral} \\
+        | grep -f {output.txt} \\
+        | tr '\\t' '\\n' \\
+        | awk -F ',' '{{print $1}}' \\
+        | tr '/' '_' \\
+        | cut -d '_' -f1-5 \\
+        > {output.fa}
+    
+    mkdir -p {params.outdir}
+    faSplit byname {output.fa} {params.outdir}
+    """
+
+
+rule metaquast:
+    """
+    Quality-control step of assess the quality of the assembly. 
+    @Input:
+        Trimmed, host remove FastQ file (scatter)
+    @Output:
+        Kraken report and annotation report of assembled contigs,
+        and aligned reads against the assembled megahit contigs. 
+    """
+    input:
+        metaspades=join(workpath,"output","{name}","{name}.metaspades.contigs.fa"),
+        megahit=join(workpath,"output","{name}","{name}.megahit.contigs.fa"),
+    output:
+        report=join(workpath,"output","{name}","{name}_metaquast","report.html")
+    params:
+        rname='metaq',
+        ref=join(workpath,"temp","{name}","metaquastref"),
+        outdir=join(workpath,"output","{name}","{name}_metaquast"),
+    threads: int(allocated("threads", "metaquast", cluster))
+    container:
+        config['images']['metaquast']
+    shell: """
+    metaquast.py \\
+        {input.metaspades} \\
+        {input.megahit} \\
+        -r {params.ref} \\
+        --fragmented \\
+        --gene-finding \\
+        --unique-mapping \\
+        -o {params.outdir} \\
+        --threads {threads}
     """
