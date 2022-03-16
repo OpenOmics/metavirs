@@ -543,7 +543,7 @@ rule prep_metaquast:
     > {output.fa}
     
     mkdir -p {params.outdir}
-    faSplit byname {output.fa} {params.outdir}
+    faSplit byname {output.fa} {params.outdir}/
     """
 
 
