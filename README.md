@@ -42,7 +42,7 @@ module load singularity
 ```
 
 ## Contribute 
-This site is a living document, created for and by members like you. metavirs is maintained by the members of NCBR and is improved by continous feedback! We encourage you to contribute new content and make improvements to existing content via pull request to our [GitHub repository :octicons-heart-fill-24:{ .heart }](https://github.com/OpenOmics/metavirs).
+This site is a living document, created for and by members like you. metavirs is maintained by the members of NCBR and is improved by continous feedback! We encourage you to contribute new content and make improvements to existing content via pull request to our [GitHub repository](https://github.com/OpenOmics/metavirs).
 
 
 ## References
