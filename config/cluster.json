@@ -3,7 +3,8 @@
         "threads": "4",
         "mem": "8g",
         "partition": "norm",
-        "time": "0-04:00:00"
+        "time": "0-04:00:00",
+        "gres": "lscratch:64"
     },
     "fastqc": {
         "threads": "16",
