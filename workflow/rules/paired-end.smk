@@ -282,12 +282,13 @@ rule metaspades:
     kraken2  --threads {threads} \\
         --db {params.viral_db} {output.contigs} \\
         --report {output.report} \\
-        > {output.k2txt}
+    > {output.k2txt}
     awk -v OFS='\\t' '{{split($2,a,"_"); if ($1 == "C") print $2,$3,a[6]}}' \\
         {output.k2txt} > {output.krona}
     cp {output.krona} {output.tmp1}
 
     CAT contigs -n {threads} \\
+        --force \\
         -c {output.contigs} \\
         -d {params.cat_db} \\
         -t {params.cat_tax} \\
@@ -312,12 +313,12 @@ rule metaspades:
     seqtk subseq \\
         {output.contigs} \\
         {output.tmp3} \\
-        > {output.kraken_contigs}
+    > {output.kraken_contigs}
     cut -f1 {output.taxids} > {output.tmp4}
     seqtk subseq \\
         {output.contigs} \\
         {output.tmp4} \\
-        > {output.cat_contigs}
+    > {output.cat_contigs}
 
     bowtie2-build --threads {threads} \\
         {output.contigs} \\
@@ -402,7 +403,7 @@ rule megahit:
     kraken2  --threads {threads} \\
         --db {params.viral_db} {output.contigs} \\
         --report {output.report} \\
-        > {output.k2txt}
+    > {output.k2txt}
 
     awk -v OFS='\\t' '{{split($2,a,"_"); \\
         split(a[4],b,"="); if ($1 == "C") print $2,$3,b[2]}}' \\
@@ -435,12 +436,12 @@ rule megahit:
     seqtk subseq \\
         {output.contigs} \\
         {output.tmp3} \\
-        > {output.kraken_contigs}
+    > {output.kraken_contigs}
     cut -f1 {output.taxids} > {output.tmp4}
     seqtk subseq \\
         {output.contigs} \\
         {output.tmp4} \\
-        > {output.cat_contigs}
+    > {output.cat_contigs}
 
     bowtie2-build --threads {threads} \\
         {output.contigs} \\
@@ -531,7 +532,7 @@ rule prep_metaquast:
         | sort \\
         | uniq \\
         | tr ' ' '_' \\
-        > {output.txt}
+    > {output.txt}
     
     paste - - < {params.ncbi_viral} \\
         | grep -f {output.txt} \\
@@ -539,7 +540,7 @@ rule prep_metaquast:
         | awk -F ',' '{{print $1}}' \\
         | tr '/' '_' \\
         | cut -d '_' -f1-5 \\
-        > {output.fa}
+    > {output.fa}
     
     mkdir -p {params.outdir}
     faSplit byname {output.fa} {params.outdir}
