@@ -266,6 +266,7 @@ rule metaspades:
         config['tools']['samtools']
     shell: """
     mkdir -p {wildcards.name}/metaspades
+    mkdir -p output/{wildcards.name}
     metaspades.py -t {threads} \\
         -m 240 \\
         -1 {input.r1} \\
@@ -381,6 +382,11 @@ rule megahit:
         config['tools']['samtools']
     shell: """
     mkdir -p {wildcards.name}/megahit
+    # megahit output directory cannot
+    # exist prior to running
+    if [ -d "{wildcards.name}/megahit" ]; then
+        rm -rf "{wildcards.name}/megahit"
+    if
     megahit -t {threads} \\
         -1 {input.r1} \\
         -2 {input.r2} \\

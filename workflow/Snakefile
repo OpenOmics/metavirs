@@ -28,8 +28,6 @@ tmpdir = config['options']['tmp_dir']     # Temporary directory
 with open(join('config', 'cluster.json')) as fh:
     cluster = json.load(fh)
 
-print(cluster)
-
 # Imported rules
 include: join("rules", "common.smk")
 include: join("rules", "paired-end.smk")
