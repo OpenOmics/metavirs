@@ -236,10 +236,10 @@ rule metaspades:
         k2txt=join(workpath,"kraken2","{name}.metaspades.contigs.kraken2"),
         krona=join(workpath,"kraken2","{name}.metaspades.contigs.kraken2.krona"),
         tmp1=join(workpath,"temp","{name}","{name}.metaspades_kraken2.txt"),
-        cat_class=join(workpath,"CAT","{name}.metaspades.contig2classification.txt"),
-        cat_names=join(workpath,"CAT","{name}.metaspades.official_names.txt"),
-        cat_summary=join(workpath,"CAT","{name}.metaspades.summary.txt"),
-        taxids=join(workpath,"CAT","{name}.metaspades.contig_taxids.txt"),
+        cat_class=join(workpath,"CAT","{name}","{name}.metaspades.contig2classification.txt"),
+        cat_names=join(workpath,"CAT","{name}","{name}.metaspades.official_names.txt"),
+        cat_summary=join(workpath,"CAT","{name}","{name}.metaspades.summary.txt"),
+        taxids=join(workpath,"CAT","{name}","{name}.metaspades.contig_taxids.txt"),
         tmp2=join(workpath,"temp","{name}","{name}.metaspades_CAT.txt"),
         tmp3=join(workpath,"temp","{name}","{name}.metaspades.kraken2.viral.names.txt"),
         kraken_contigs=join(workpath,"output","{name}","{name}.metaspades.kraken2_viral.contigs.fa"),
@@ -265,6 +265,7 @@ rule metaspades:
         config['tools']['bowtie'],
         config['tools']['samtools']
     shell: """
+    set -x
     mkdir -p {wildcards.name}/metaspades
     # metaspades output directory cannot
     # exist prior to running
@@ -287,12 +288,13 @@ rule metaspades:
         {output.k2txt} > {output.krona}
     cp {output.krona} {output.tmp1}
 
+    mkdir -p {params.cat_dir}/{wildcards.name}/
     CAT contigs -n {threads} \\
         --force \\
         -c {output.contigs} \\
         -d {params.cat_db} \\
         -t {params.cat_tax} \\
-        --out_prefix {params.cat_dir}/{wildcards.name}.metaspades \\
+        --out_prefix {params.cat_dir}/{wildcards.name}/{wildcards.name}.metaspades \\
         --path_to_diamond {params.cat_dep}
     CAT add_names -i {output.cat_class} \\
         -o {output.cat_names} \\
@@ -358,10 +360,10 @@ rule megahit:
         k2txt=join(workpath,"kraken2","{name}.megahit.contigs.kraken2"),
         krona=join(workpath,"kraken2","{name}.megahit.contigs.kraken2.krona"),
         tmp1=join(workpath,"temp","{name}","{name}.megahit_kraken2.txt"),
-        cat_class=join(workpath,"CAT","{name}.megahit.contig2classification.txt"),
-        cat_names=join(workpath,"CAT","{name}.megahit.official_names.txt"),
-        cat_summary=join(workpath,"CAT","{name}.megahit.summary.txt"),
-        taxids=join(workpath,"CAT","{name}.megahit.contig_taxids.txt"),
+        cat_class=join(workpath,"CAT","{name}","{name}.megahit.contig2classification.txt"),
+        cat_names=join(workpath,"CAT","{name}","{name}.megahit.official_names.txt"),
+        cat_summary=join(workpath,"CAT","{name}","{name}.megahit.summary.txt"),
+        taxids=join(workpath,"CAT","{name}","{name}.megahit.contig_taxids.txt"),
         tmp2=join(workpath,"temp","{name}","{name}.megahit_CAT.txt"),
         tmp3=join(workpath,"temp","{name}","{name}.megahit.kraken2.viral.names.txt"),
         kraken_contigs=join(workpath,"output","{name}","{name}.megahit.kraken2_viral.contigs.fa"),
@@ -373,7 +375,7 @@ rule megahit:
     params:
         rname='megahit',
         viral_db=config['references']['kraken2_viral_db'],
-            cat_db=config['references']['CAT_db'],
+        cat_db=config['references']['CAT_db'],
         cat_tax=config['references']['CAT_taxonomy'],
         cat_dep=config['references']['CAT_diamond'],
         cat_dir=join(workpath,"CAT")
@@ -387,6 +389,7 @@ rule megahit:
         config['tools']['bowtie'],
         config['tools']['samtools']
     shell: """
+    set -x
     mkdir -p {wildcards.name}/megahit
     # megahit output directory cannot
     # exist prior to running
@@ -410,11 +413,13 @@ rule megahit:
         {output.k2txt} > {output.krona}
     cp {output.krona} {output.tmp1}
 
+    mkdir -p {params.cat_dir}/{wildcards.name}/
     CAT contigs -n {threads} \\
+        --force \\
         -c {output.contigs} \\
         -d {params.cat_db} \\
         -t {params.cat_tax} \\
-        --out_prefix {params.cat_dir}/{wildcards.name}.megahit \\
+        --out_prefix {params.cat_dir}/{wildcards.name}/{wildcards.name}.megahit \\
         --path_to_diamond {params.cat_dep}
     CAT add_names -i {output.cat_class} \\
         -o {output.cat_names} \\
@@ -452,14 +457,14 @@ rule megahit:
         -2 {input.r2} \\
         -S {output.sam}
     
-    samtools view -@ 32 \\
+    samtools view -@ {threads} \\
         -bS {output.sam} > {output.bam} 
     samtools sort \\
-        -@ 32 \\
+        -@ {threads} \\
         {output.bam}  \\
         -o {output.final}
     samtools index \\
-        -@ 32 {output.final}
+        -@ {threads} {output.final}
     """
 
 
@@ -508,10 +513,9 @@ rule prep_metaquast:
     TODO: merge prep_metaquast and metaquast rules together once 
     a docker image has been built with all dependencies.
     @Input:
-        Trimmed, host remove FastQ file (scatter)
+        Kraken viral aggregrate counts/clade to file (scatter)
     @Output:
-        Kraken report and annotation report of assembled contigs,
-        and aligned reads against the assembled megahit contigs. 
+        Reformatted text file and split fasta file for metaquast 
     """
     input:
         report=join(workpath,"info","{name}.reads_kraken2_report.txt"),
@@ -551,10 +555,9 @@ rule metaquast:
     """
     Quality-control step of assess the quality of the assembly. 
     @Input:
-        Trimmed, host remove FastQ file (scatter)
+        Fasta file of assembled contigs from Metaspades and megahit  (scatter)
     @Output:
-        Kraken report and annotation report of assembled contigs,
-        and aligned reads against the assembled megahit contigs. 
+        Quality-control report of the assembly.
     """
     input:
         metaspades=join(workpath,"output","{name}","{name}.metaspades.contigs.fa"),
