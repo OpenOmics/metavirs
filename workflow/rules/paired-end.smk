@@ -266,12 +266,17 @@ rule metaspades:
         config['tools']['samtools']
     shell: """
     mkdir -p {wildcards.name}/metaspades
-    mkdir -p output/{wildcards.name}
+    # metaspades output directory cannot
+    # exist prior to running
+    if [ -d "{wildcards.name}/metaspades" ]; then
+        rm -rf "{wildcards.name}/metaspades"
+    fi
     metaspades.py -t {threads} \\
         -m 240 \\
         -1 {input.r1} \\
         -2 {input.r2} \\
         -o {wildcards.name}/metaspades
+    mkdir -p output/{wildcards.name}
     mv {wildcards.name}/metaspades/contigs.fasta {output.contigs}
 
     kraken2  --threads {threads} \\
@@ -386,7 +391,7 @@ rule megahit:
     # exist prior to running
     if [ -d "{wildcards.name}/megahit" ]; then
         rm -rf "{wildcards.name}/megahit"
-    if
+    fi
     megahit -t {threads} \\
         -1 {input.r1} \\
         -2 {input.r2} \\
