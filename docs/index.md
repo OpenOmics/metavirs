@@ -8,7 +8,7 @@ Welcome to metavirs' documentation! This guide is the main source of documentati
 
 The **`./metavirs`** pipeline is composed several inter-related sub commands to setup and run the pipeline across different systems. Each of the available sub commands perform different functions: 
 
- * [<code>metavirs <b>run</b></code>](usage/run.md): Run the GATK4 WES pipeline with your input files.
+ * [<code>metavirs <b>run</b></code>](usage/run.md): Run the metavirs pipeline with your input files.
  * [<code>metavirs <b>unlock</b></code>](usage/unlock.md): Unlocks a previous runs output directory.
  * [<code>metavirs <b>cache</b></code>](usage/cache.md): Cache remote resources locally, coming soon!
 
