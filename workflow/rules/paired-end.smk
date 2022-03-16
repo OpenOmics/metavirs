@@ -304,11 +304,15 @@ rule metaspades:
         -c {output.contigs} \\
         -i {output.cat_names} \\
         -o {output.cat_summary}
-    grep "Viruses:" {output.cat_names} \\
+    
+    # Try to grep for Virsuses, may pipefail
+    # if nothing is found, touch output file 
+    {{ grep "Viruses:" {output.cat_names} \\
         | awk -v OFS='\\t' '{{split($8,a,";"); \\
             split(a[split($8,a,";")],b,"*"); \\
             split($1,c,"_"); print $1,b[1],c[6]}}' \\
         > {output.taxids}
+    }} || touch {output.taxids} 
     cp {output.taxids} {output.tmp2}
 
     cut -f1 {output.krona} > {output.tmp3}
@@ -429,12 +433,16 @@ rule megahit:
         -c {output.contigs} \\
         -i {output.cat_names} \\
         -o {output.cat_summary}
-    grep "Viruses:" {output.cat_names} \\
+    
+    # Try to grep for Virsuses, may pipefail
+    # if nothing is found, touch output file 
+    {{ grep "Viruses:" {output.cat_names} \\
         | awk -v OFS='\\t' '{{split($8,a,";"); \\
             split(a[split($8,a,";")],b,"*"); \\
             split($1,c,"_"); split(c[4],d,"="); \\
             print $1,b[1],d[2]}}' \\
-        > {output.taxids}
+        > {output.taxids} 
+    }} || touch {output.taxids}
     cp {output.taxids} {output.tmp2}
 
     cut -f1 {output.krona} > {output.tmp3}
