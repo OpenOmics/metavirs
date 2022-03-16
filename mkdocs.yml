@@ -7,7 +7,7 @@ site_description: >-
 # Repository
 repo_name: OpenOmics/metavirs
 repo_url: https://github.com/OpenOmics/metavirs
-edit_uri: https://github.com/OpenOmics/metavirs/edit/unified/docs/
+edit_uri: https://github.com/OpenOmics/metavirs/edit/main/docs/
 
 # Extra
 extra_css:
