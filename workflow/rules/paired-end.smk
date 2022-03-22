@@ -528,12 +528,12 @@ rule prep_metaquast:
     input:
         report=join(workpath,"{name}","info","{name}.reads_kraken2_report.txt"),
     output:
-        txt=join(workpath,"temp","{name}","{name}_reads_class_names.txt"),
-        fa=join(workpath,"temp","{name}","{name}.metaquast.fa"),
+        txt=join(workpath,"{name}","temp","{name}_reads_class_names.txt"),
+        fa=join(workpath,"{name}","temp","{name}.metaquast.fa"),
     params:
         rname='prepmetaq',
         ncbi_viral=config['references']['ncbi_viral_fasta'],
-        outdir=join(workpath,"temp","{name}","metaquastref"),
+        outdir=join(workpath,"{name}","temp","metaquastref"),
     threads: int(allocated("threads", "prep_metaquast", cluster))
     envmodules:
         config['tools']['ucsc']
@@ -570,12 +570,13 @@ rule metaquast:
     input:
         metaspades=join(workpath,"{name}","output","{name}.metaspades.contigs.fa"),
         megahit=join(workpath,"{name}","output","{name}.megahit.contigs.fa"),
+        dep=join(workpath,"{name}","temp","{name}.metaquast.fa"),
     output:
-        report=join(workpath,"output","{name}","{name}_metaquast","report.html")
+        report=join(workpath,"{name}","output","{name}_metaquast","report.html")
     params:
         rname='metaq',
-        ref=join(workpath,"temp","{name}","metaquastref"),
-        outdir=join(workpath,"output","{name}","{name}_metaquast"),
+        ref=join(workpath,"{name}","temp","metaquastref"),
+        outdir=join(workpath,"{name}","output","{name}_metaquast"),
     threads: int(allocated("threads", "metaquast", cluster))
     container:
         config['images']['metaquast']

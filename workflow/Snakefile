@@ -116,10 +116,10 @@ rule all:
         ),
         # Metaquast, quality report of assembly
         expand(
-            join(workpath,"temp","{name}","{name}.metaquast.fa"),
+            join(workpath,"{name}","temp","{name}.metaquast.fa"),
             name=samples
         ),
         expand(
-            join(workpath,"output","{name}","{name}_metaquast","report.html"),
+            join(workpath,"{name}","output","{name}_metaquast","report.html"),
             name=samples
         )
