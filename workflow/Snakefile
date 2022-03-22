@@ -105,13 +105,13 @@ rule all:
         # Megahit, viral assembly, annotation, and alignment to contigs
         # @imported from rules/paired-end.smk
         expand(
-            join(workpath,"output","{name}","{name}.megahit.bam"), 
+            join(workpath,"{name}","output","{name}.megahit.bam"), 
             name=samples
         ),
         # Krona, taxonomic classification report
         # @imported from rules/paired-end.smk
         expand(
-            join(workpath,"output","{name}","{name}.contig.classification.html"),
+            join(workpath,"{name}","output","{name}.contig.classification.html"),
             name=samples
         ),
         # Metaquast, quality report of assembly

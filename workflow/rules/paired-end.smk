@@ -359,30 +359,30 @@ rule megahit:
         r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
         r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     output:
-        contigs=join(workpath,"output","{name}","{name}.megahit.contigs.fa"),
-        report=join(workpath,"info","{name}.megahit.contigs_kraken2_report.txt"),
-        k2txt=join(workpath,"kraken2","{name}.megahit.contigs.kraken2"),
-        krona=join(workpath,"kraken2","{name}.megahit.contigs.kraken2.krona"),
-        tmp1=join(workpath,"temp","{name}","{name}.megahit_kraken2.txt"),
-        cat_class=join(workpath,"CAT","{name}","{name}.megahit.contig2classification.txt"),
-        cat_names=join(workpath,"CAT","{name}","{name}.megahit.official_names.txt"),
-        cat_summary=join(workpath,"CAT","{name}","{name}.megahit.summary.txt"),
-        taxids=join(workpath,"CAT","{name}","{name}.megahit.contig_taxids.txt"),
-        tmp2=join(workpath,"temp","{name}","{name}.megahit_CAT.txt"),
-        tmp3=join(workpath,"temp","{name}","{name}.megahit.kraken2.viral.names.txt"),
-        kraken_contigs=join(workpath,"output","{name}","{name}.megahit.kraken2_viral.contigs.fa"),
-        tmp4=join(workpath,"temp","{name}","{name}.megahit.CAT.viral.names.txt"),
-        cat_contigs=join(workpath,"output","{name}","{name}.megahit.cat_viral.contigs.fa"),
-        sam=temp(join(workpath,"temp","{name}.megahit.sam")),
-        bam=temp(join(workpath,"temp","{name}.megahit.bam")),
-        final=join(workpath,"output","{name}","{name}.megahit.bam"),  
+        contigs=join(workpath,"{name}","output","{name}.megahit.contigs.fa"),
+        report=join(workpath,"{name}","info","{name}.megahit.contigs_kraken2_report.txt"),
+        k2txt=join(workpath,"{name}","kraken2","{name}.megahit.contigs.kraken2"),
+        krona=join(workpath,"{name}","kraken2","{name}.megahit.contigs.kraken2.krona"),
+        tmp1=join(workpath,"{name}","temp","{name}.megahit_kraken2.txt"),
+        cat_class=join(workpath,"{name}","CAT","{name}.megahit.contig2classification.txt"),
+        cat_names=join(workpath,"{name}","CAT","{name}.megahit.official_names.txt"),
+        cat_summary=join(workpath,"{name}","CAT","{name}.megahit.summary.txt"),
+        taxids=join(workpath,"{name}","CAT","{name}.megahit.contig_taxids.txt"),
+        tmp2=join(workpath,"{name}","temp","{name}.megahit_CAT.txt"),
+        tmp3=join(workpath,"{name}","temp","{name}.megahit.kraken2.viral.names.txt"),
+        kraken_contigs=join(workpath,"{name}","output","{name}.megahit.kraken2_viral.contigs.fa"),
+        tmp4=join(workpath,"{name}","temp","{name}.megahit.CAT.viral.names.txt"),
+        cat_contigs=join(workpath,"{name}","output","{name}.megahit.cat_viral.contigs.fa"),
+        sam=temp(join(workpath,"{name}","temp","{name}.megahit.sam")),
+        bam=temp(join(workpath,"{name}","temp","{name}.megahit.bam")),
+        final=join(workpath,"{name}","output","{name}.megahit.bam"),  
     params:
         rname='megahit',
         viral_db=config['references']['kraken2_viral_db'],
         cat_db=config['references']['CAT_db'],
         cat_tax=config['references']['CAT_taxonomy'],
         cat_dep=config['references']['CAT_diamond'],
-        cat_dir=join(workpath,"CAT")
+        cat_dir=join(workpath,"{name}","CAT")
     threads: int(allocated("threads", "megahit", cluster))
     conda: config['conda']['CAT']
     envmodules: 
@@ -417,13 +417,13 @@ rule megahit:
         {output.k2txt} > {output.krona}
     cp {output.krona} {output.tmp1}
 
-    mkdir -p {params.cat_dir}/{wildcards.name}/
+    mkdir -p {params.cat_dir}/
     CAT contigs -n {threads} \\
         --force \\
         -c {output.contigs} \\
         -d {params.cat_db} \\
         -t {params.cat_tax} \\
-        --out_prefix {params.cat_dir}/{wildcards.name}/{wildcards.name}.megahit \\
+        --out_prefix {params.cat_dir}/{wildcards.name}.megahit \\
         --path_to_diamond {params.cat_dep}
     CAT add_names -i {output.cat_class} \\
         -o {output.cat_names} \\
@@ -458,9 +458,9 @@ rule megahit:
 
     bowtie2-build --threads {threads} \\
         {output.contigs} \\
-        temp/{wildcards.name}/{wildcards.name}_megahit
+        {wildcards.name}/temp/{wildcards.name}_megahit
     bowtie2 -p {threads} \\
-        -x temp/{wildcards.name}/{wildcards.name}_megahit \\
+        -x {wildcards.name}/temp/{wildcards.name}_megahit \\
         -1 {input.r1} \\
         -2 {input.r2} \\
         -S {output.sam}
@@ -490,10 +490,10 @@ rule krona:
     input:
         f1=join(workpath,"{name}","temp","{name}.metaspades_CAT.txt"),
         f2=join(workpath,"{name}","temp","{name}.metaspades_kraken2.txt"),
-        f3=join(workpath,"temp","{name}","{name}.megahit_CAT.txt"),
-        f4=join(workpath,"temp","{name}","{name}.megahit_kraken2.txt"),
+        f3=join(workpath,"{name}","temp","{name}.megahit_CAT.txt"),
+        f4=join(workpath,"{name}","temp","{name}.megahit_kraken2.txt"),
     output:
-        report=join(workpath,"output","{name}","{name}.contig.classification.html"),
+        report=join(workpath,"{name}","output","{name}.contig.classification.html"),
     params:
         rname='krona',
         krona_ref=config['references']['kronatools'],
@@ -569,7 +569,7 @@ rule metaquast:
     """
     input:
         metaspades=join(workpath,"{name}","output","{name}.metaspades.contigs.fa"),
-        megahit=join(workpath,"output","{name}","{name}.megahit.contigs.fa"),
+        megahit=join(workpath,"{name}","output","{name}.megahit.contigs.fa"),
     output:
         report=join(workpath,"output","{name}","{name}_metaquast","report.html")
     params:
