@@ -19,7 +19,7 @@ rule fc_lane:
     input:
         r1=join(workpath,"{name}.R1.fastq.gz"),
     output:
-        info=join(workpath,"rawQC","{name}.fastq.info.txt")
+        info=join(workpath,"{name}","rawQC","{name}.fastq.info.txt")
     params:
         rname='fc_lane',
         get_flowcell_lanes=join("workflow", "scripts", "get_flowcell_lanes.py"),

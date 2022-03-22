@@ -46,11 +46,11 @@ rule rawfastqc:
         join(workpath,"{name}.R1.fastq.gz"),
         join(workpath,"{name}.R2.fastq.gz"),
     output:
-        join(workpath,"rawQC","{name}.R1_fastqc.zip"),
-        join(workpath,"rawQC","{name}.R2_fastqc.zip"),
+        join(workpath,"{name}","rawQC","{name}.R1_fastqc.zip"),
+        join(workpath,"{name}","rawQC","{name}.R2_fastqc.zip"),
     params:
         rname='rawfqc',
-        outdir=join(workpath,"rawQC"),
+        outdir=join(workpath,"{name}","rawQC"),
     threads: int(allocated("threads", "rawfastqc", cluster))
     envmodules: config['tools']['fastqc']
     # container: config['images']['fastqc']
@@ -113,11 +113,11 @@ rule fastqc:
         join(workpath,"trim","{name}.R1.trim.fastq"),
         join(workpath,"trim","{name}.R2.trim.fastq"),
     output:
-        join(workpath,"QC","{name}.R1.trim_fastqc.zip"),
-        join(workpath,"QC","{name}.R2.trim_fastqc.zip"),
+        join(workpath,"{name}","QC","{name}.R1.trim_fastqc.zip"),
+        join(workpath,"{name}","QC","{name}.R2.trim_fastqc.zip"),
     params:
         rname='fqc',
-        outdir=join(workpath,"QC"),
+        outdir=join(workpath,"{name}","QC"),
     threads: int(allocated("threads", "fastqc", cluster))
     envmodules: config['tools']['fastqc']
     # container: config['images']['fastqc']
