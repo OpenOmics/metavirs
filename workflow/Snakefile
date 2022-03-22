@@ -99,7 +99,7 @@ rule all:
         # Metaspades, viral assembly, annotation, and alignment to contigs
         # @imported from rules/paired-end.smk
         expand(
-            join(workpath,"output","{name}","{name}.metaspades.bam"), 
+            join(workpath,"{name}","output","{name}.metaspades.bam"), 
             name=samples
         ),
         # Megahit, viral assembly, annotation, and alignment to contigs

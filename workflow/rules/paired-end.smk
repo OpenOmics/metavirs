@@ -231,30 +231,30 @@ rule metaspades:
         r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
         r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     output:
-        contigs=join(workpath,"output","{name}","{name}.metaspades.contigs.fa"),
-        report=join(workpath,"info","{name}.metaspades.contigs_kraken2_report.txt"),
-        k2txt=join(workpath,"kraken2","{name}.metaspades.contigs.kraken2"),
-        krona=join(workpath,"kraken2","{name}.metaspades.contigs.kraken2.krona"),
-        tmp1=join(workpath,"temp","{name}","{name}.metaspades_kraken2.txt"),
-        cat_class=join(workpath,"CAT","{name}","{name}.metaspades.contig2classification.txt"),
-        cat_names=join(workpath,"CAT","{name}","{name}.metaspades.official_names.txt"),
-        cat_summary=join(workpath,"CAT","{name}","{name}.metaspades.summary.txt"),
-        taxids=join(workpath,"CAT","{name}","{name}.metaspades.contig_taxids.txt"),
-        tmp2=join(workpath,"temp","{name}","{name}.metaspades_CAT.txt"),
-        tmp3=join(workpath,"temp","{name}","{name}.metaspades.kraken2.viral.names.txt"),
-        kraken_contigs=join(workpath,"output","{name}","{name}.metaspades.kraken2_viral.contigs.fa"),
-        tmp4=join(workpath,"temp","{name}","{name}.metaspades.CAT.viral.names.txt"),
-        cat_contigs=join(workpath,"output","{name}","{name}.metaspades.cat_viral.contigs.fa"),
-        sam=temp(join(workpath,"temp","{name}.metaspades.sam")),
-        bam=temp(join(workpath,"temp","{name}.metaspades.bam")),
-        final=join(workpath,"output","{name}","{name}.metaspades.bam"),        
+        contigs=join(workpath,"{name}","output","{name}.metaspades.contigs.fa"),
+        report=join(workpath,"{name}","info","{name}.metaspades.contigs_kraken2_report.txt"),
+        k2txt=join(workpath,"{name}","kraken2","{name}.metaspades.contigs.kraken2"),
+        krona=join(workpath,"{name}","kraken2","{name}.metaspades.contigs.kraken2.krona"),
+        tmp1=join(workpath,"{name}","temp","{name}.metaspades_kraken2.txt"),
+        cat_class=join(workpath,"{name}","CAT","{name}.metaspades.contig2classification.txt"),
+        cat_names=join(workpath,"{name}","CAT","{name}.metaspades.official_names.txt"),
+        cat_summary=join(workpath,"{name}","CAT","{name}.metaspades.summary.txt"),
+        taxids=join(workpath,"{name}","CAT","{name}.metaspades.contig_taxids.txt"),
+        tmp2=join(workpath,"{name}","temp","{name}.metaspades_CAT.txt"),
+        tmp3=join(workpath,"{name}","temp","{name}.metaspades.kraken2.viral.names.txt"),
+        kraken_contigs=join(workpath,"{name}","output","{name}.metaspades.kraken2_viral.contigs.fa"),
+        tmp4=join(workpath,"{name}","temp","{name}.metaspades.CAT.viral.names.txt"),
+        cat_contigs=join(workpath,"{name}","output","{name}.metaspades.cat_viral.contigs.fa"),
+        sam=temp(join(workpath,"{name}","temp","{name}.metaspades.sam")),
+        bam=temp(join(workpath,"{name}","temp","{name}.metaspades.bam")),
+        final=join(workpath,"{name}","output","{name}.metaspades.bam"),        
     params:
         rname='metaspades',
         viral_db=config['references']['kraken2_viral_db'],
         cat_db=config['references']['CAT_db'],
         cat_tax=config['references']['CAT_taxonomy'],
         cat_dep=config['references']['CAT_diamond'],
-        cat_dir=join(workpath,"CAT"),
+        cat_dir=join(workpath,"{name}","CAT"),
     threads: int(allocated("threads", "metaspades", cluster))
     conda: config['conda']['CAT']
     envmodules: 
@@ -277,7 +277,7 @@ rule metaspades:
         -1 {input.r1} \\
         -2 {input.r2} \\
         -o {wildcards.name}/metaspades
-    mkdir -p output/{wildcards.name}
+    mkdir -p {wildcards.name}/output
     mv {wildcards.name}/metaspades/contigs.fasta {output.contigs}
 
     kraken2  --threads {threads} \\
@@ -288,13 +288,13 @@ rule metaspades:
         {output.k2txt} > {output.krona}
     cp {output.krona} {output.tmp1}
 
-    mkdir -p {params.cat_dir}/{wildcards.name}/
+    mkdir -p {params.cat_dir}
     CAT contigs -n {threads} \\
         --force \\
         -c {output.contigs} \\
         -d {params.cat_db} \\
         -t {params.cat_tax} \\
-        --out_prefix {params.cat_dir}/{wildcards.name}/{wildcards.name}.metaspades \\
+        --out_prefix {params.cat_dir}/{wildcards.name}.metaspades \\
         --path_to_diamond {params.cat_dep}
     CAT add_names -i {output.cat_class} \\
         -o {output.cat_names} \\
@@ -328,9 +328,9 @@ rule metaspades:
 
     bowtie2-build --threads {threads} \\
         {output.contigs} \\
-        temp/{wildcards.name}/{wildcards.name}_metaspades
+        {wildcards.name}/temp/{wildcards.name}_metaspades
     bowtie2 -p {threads} \\
-        -x temp/{wildcards.name}/{wildcards.name}_metaspades \\
+        -x {wildcards.name}/temp/{wildcards.name}_metaspades \\
         -1 {input.r1} \\
         -2 {input.r2} \\
         -S {output.sam}
@@ -488,8 +488,8 @@ rule krona:
         Interactive Krona report for a sample. 
     """
     input:
-        f1=join(workpath,"temp","{name}","{name}.metaspades_CAT.txt"),
-        f2=join(workpath,"temp","{name}","{name}.metaspades_kraken2.txt"),
+        f1=join(workpath,"{name}","temp","{name}.metaspades_CAT.txt"),
+        f2=join(workpath,"{name}","temp","{name}.metaspades_kraken2.txt"),
         f3=join(workpath,"temp","{name}","{name}.megahit_CAT.txt"),
         f4=join(workpath,"temp","{name}","{name}.megahit_kraken2.txt"),
     output:
@@ -568,7 +568,7 @@ rule metaquast:
         Quality-control report of the assembly.
     """
     input:
-        metaspades=join(workpath,"output","{name}","{name}.metaspades.contigs.fa"),
+        metaspades=join(workpath,"{name}","output","{name}.metaspades.contigs.fa"),
         megahit=join(workpath,"output","{name}","{name}.megahit.contigs.fa"),
     output:
         report=join(workpath,"output","{name}","{name}_metaquast","report.html")
