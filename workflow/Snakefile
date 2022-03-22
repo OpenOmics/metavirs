@@ -73,21 +73,21 @@ rule all:
         # Cutadapt, remove adapter sequences
         # @imported from rules/paired-end.smk
         expand(
-            join(workpath,"trim","{name}.R1.trim.fastq"), 
+            join(workpath,"{name}","trim","{name}.R1.trim.fastq"), 
             name=samples
         ),
         expand(
-            join(workpath,"trim","{name}.R2.trim.fastq"), 
+            join(workpath,"{name}","trim","{name}.R2.trim.fastq"), 
             name=samples
         ),
         # Remove Host contamination
         # @imported from rules/paired-end.smk
         expand(
-            join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"), 
+            join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"), 
             name=samples
         ),
         expand(
-            join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"), 
+            join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"), 
             name=samples
         ),
         # Kraken2, viral taxonomic classification

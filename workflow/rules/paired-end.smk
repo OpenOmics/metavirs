@@ -76,8 +76,8 @@ rule trim:
         r1=join(workpath,"{name}.R1.fastq.gz"),
         r2=join(workpath,"{name}.R2.fastq.gz"),
     output:
-        r1=join(workpath,"trim","{name}.R1.trim.fastq"),
-        r2=join(workpath,"trim","{name}.R2.trim.fastq"),
+        r1=join(workpath,"{name}","trim","{name}.R1.trim.fastq"),
+        r2=join(workpath,"{name}","trim","{name}.R2.trim.fastq"),
     params:
         rname='trimfq',
         adapters=config['references']['adapters'],
@@ -110,8 +110,8 @@ rule fastqc:
         FastQC report and zip file containing data quality information
     """
     input:
-        join(workpath,"trim","{name}.R1.trim.fastq"),
-        join(workpath,"trim","{name}.R2.trim.fastq"),
+        join(workpath,"{name}","trim","{name}.R1.trim.fastq"),
+        join(workpath,"{name}","trim","{name}.R2.trim.fastq"),
     output:
         join(workpath,"{name}","QC","{name}.R1.trim_fastqc.zip"),
         join(workpath,"{name}","QC","{name}.R2.trim_fastqc.zip"),
@@ -139,14 +139,14 @@ rule remove_host:
         Trimmed, host remove FastQ file
     """
     input:
-        r1=join(workpath,"trim","{name}.R1.trim.fastq"),
-        r2=join(workpath,"trim","{name}.R2.trim.fastq"),
+        r1=join(workpath,"{name}","trim","{name}.R1.trim.fastq"),
+        r2=join(workpath,"{name}","trim","{name}.R2.trim.fastq"),
     output:
-        sam=temp(join(workpath,"temp","{name}.host_contaminated.sam")),
-        bam=temp(join(workpath,"temp","{name}.host_contaminated.bam")),
-        sorted_bam=temp(join(workpath,"temp","{name}.host_contaminated.sorted.bam")),
-        r1=join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"),
-        r2=join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"),
+        sam=temp(join(workpath,"{name}","temp","{name}.host_contaminated.sam")),
+        bam=temp(join(workpath,"{name}","temp","{name}.host_contaminated.bam")),
+        sorted_bam=temp(join(workpath,"{name}","temp","{name}.host_contaminated.sorted.bam")),
+        r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
+        r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     params:
         rname='rmhost',
         host_index=join(config['references']['host_bowtie2_index'], 'Hosts')
@@ -187,8 +187,8 @@ rule kraken_viral:
         Taxonomic classification of trimmed, host remove reads
     """
     input:
-        r1=join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"),
-        r2=join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"),
+        r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
+        r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     output:
         report=join(workpath,"info","{name}.reads_kraken2_report.txt"),
         k2txt=join(workpath,"kraken2","{name}.reads.kraken2"),
@@ -228,8 +228,8 @@ rule metaspades:
         and aligned reads against the assembled contigs. 
     """
     input:
-        r1=join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"),
-        r2=join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"),
+        r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
+        r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     output:
         contigs=join(workpath,"output","{name}","{name}.metaspades.contigs.fa"),
         report=join(workpath,"info","{name}.metaspades.contigs_kraken2_report.txt"),
@@ -356,8 +356,8 @@ rule megahit:
         and aligned reads against the assembled megahit contigs. 
     """
     input:
-        r1=join(workpath,"trim","{name}.R1.trim.host_removed.fastq.gz"),
-        r2=join(workpath,"trim","{name}.R2.trim.host_removed.fastq.gz"),
+        r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
+        r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     output:
         contigs=join(workpath,"output","{name}","{name}.megahit.contigs.fa"),
         report=join(workpath,"info","{name}.megahit.contigs_kraken2_report.txt"),
