@@ -33,7 +33,7 @@ git clone https://github.com/OpenOmics/metavirs.git
 cd metavirs/
 # Add dependencies to $PATH
 # Biowulf users should run
-/data/CCBR_Pipeliner/db/PipeDB/Conda/condabin/conda activate base
+source /data/CCBR_Pipeliner/db/PipeDB/Conda/etc/profile.d/mamba.sh 
 module load snakemake 
 module load singularity
 # Get usage information
