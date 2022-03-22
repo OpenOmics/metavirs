@@ -93,7 +93,7 @@ rule all:
         # Kraken2, viral taxonomic classification
         # @imported from rules/paired-end.smk
         expand(
-            join(workpath,"kraken2","{name}.reads.krona.html"), 
+            join(workpath,"{name}","kraken2","{name}.reads.krona.html"), 
             name=samples
         ),
         # Metaspades, viral assembly, annotation, and alignment to contigs

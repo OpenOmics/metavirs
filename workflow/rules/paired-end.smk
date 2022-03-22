@@ -190,10 +190,10 @@ rule kraken_viral:
         r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
         r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     output:
-        report=join(workpath,"info","{name}.reads_kraken2_report.txt"),
-        k2txt=join(workpath,"kraken2","{name}.reads.kraken2"),
-        kronatxt=join(workpath,"kraken2","{name}.reads.kraken2.krona"),
-        html=join(workpath,"kraken2","{name}.reads.krona.html"),
+        report=join(workpath,"{name}","info","{name}.reads_kraken2_report.txt"),
+        k2txt=join(workpath,"{name}","kraken2","{name}.reads.kraken2"),
+        kronatxt=join(workpath,"{name}","kraken2","{name}.reads.kraken2.krona"),
+        html=join(workpath,"{name}","kraken2","{name}.reads.krona.html"),
     params:
         rname='krakenviral',
         viral_db=config['references']['kraken2_viral_db'],
@@ -526,7 +526,7 @@ rule prep_metaquast:
         Reformatted text file and split fasta file for metaquast 
     """
     input:
-        report=join(workpath,"info","{name}.reads_kraken2_report.txt"),
+        report=join(workpath,"{name}","info","{name}.reads_kraken2_report.txt"),
     output:
         txt=join(workpath,"temp","{name}","{name}_reads_class_names.txt"),
         fa=join(workpath,"temp","{name}","{name}.metaquast.fa"),
