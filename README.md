@@ -1,8 +1,7 @@
-# metavirs 🔬 [![tests](https://github.com/OpenOmics/metavirs/workflows/tests/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/main.yaml) [![docs](https://github.com/OpenOmics/metavirs/workflows/docs/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/docs.yml) [![GitHub issues](https://img.shields.io/github/issues/OpenOmics/metavirs?color=brightgreen)](https://github.com/OpenOmics/metavirs/issues)  [![GitHub license](https://img.shields.io/github/license/OpenOmics/metavirs)](https://github.com/OpenOmics/metavirs/blob/main/LICENSE) 
+# metavirs 🔬 ![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/OpenOmics/metavirs?color=blue&include_prereleases) [![tests](https://github.com/OpenOmics/metavirs/workflows/tests/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/main.yaml) [![docs](https://github.com/OpenOmics/metavirs/workflows/docs/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/docs.yml) [![GitHub issues](https://img.shields.io/github/issues/OpenOmics/metavirs?color=brightgreen)](https://github.com/OpenOmics/metavirs/issues)  [![GitHub license](https://img.shields.io/github/license/OpenOmics/metavirs)](https://github.com/OpenOmics/metavirs/blob/main/LICENSE) 
 
 > **_Metagenomics Viral Sequencing Pipeline_**. This is the home of the pipeline, metavirs. Its long-term goals: to assemble, annotate, and screen enviromental samples like no pipeline before!
 
----
 ## Overview
 Welcome to metavirs! Before getting started, we highly recommend reading through [metavirs' documentation](https://openomics.github.io/metavirs/).
 
