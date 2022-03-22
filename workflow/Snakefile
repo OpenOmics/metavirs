@@ -40,11 +40,11 @@ rule all:
         # invoked with the --use-singularity option
         # @imported from rules/paired-end.smk
         expand(
-            join(workpath,"rawQC","{name}.validated.R1.fastq.log"), 
+            join(workpath,"{name}","rawQC","{name}.validated.R1.fastq.log"), 
             name=provided(samples, wf_api.use_singularity)
         ),
         expand(
-            join(workpath,"rawQC","{name}.validated.R2.fastq.log"), 
+            join(workpath,"{name}","rawQC","{name}.validated.R2.fastq.log"), 
             name=provided(samples, wf_api.use_singularity)
         ),
         # Extract Flowcell Lane information

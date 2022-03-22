@@ -17,11 +17,11 @@ rule validator:
         r1=join(workpath,"{name}.R1.fastq.gz"),
         r2=join(workpath,"{name}.R2.fastq.gz"),
     output:
-        log1=join(workpath,"rawQC","{name}.validated.R1.fastq.log"),
-        log2=join(workpath,"rawQC","{name}.validated.R2.fastq.log"),
+        log1=join(workpath,"{name}","rawQC","{name}.validated.R1.fastq.log"),
+        log2=join(workpath,"{name}","rawQC","{name}.validated.R2.fastq.log"),
     params:
         rname='validfq',
-        outdir=join(workpath,"rawQC"),
+        outdir=join(workpath,"{name}","rawQC"),
     container: config['images']['fastqvalidator']
     shell: """
     mkdir -p {params.outdir}
