@@ -215,7 +215,7 @@ ENV PATH="/opt2/CAT-5.2.3/CAT_pack:$PATH"
 # Add Dockerfile and export environment 
 # variables and set java8 as default with links
 # to alternative versions
-ADD Dockerfile /opt2/base_gatk4_wes.dockerfile
+ADD Dockerfile /opt2/metavirs.dockerfile
 RUN chmod -R a+rX /opt2 \
         && ln -s /usr/lib/jvm/java-8-openjdk-amd64/bin/java /usr/bin/java8 \
         && ln -fs /usr/lib/jvm/java-8-openjdk-amd64/bin/java /usr/bin/java
