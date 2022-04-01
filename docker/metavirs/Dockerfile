@@ -16,10 +16,11 @@ FROM ubuntu:20.04
 #  - python/3.8           # apt-get, default: 3.8.2
 #  - samtools/1.15        # apt-get, default: 1.10
 #  - seqtk/1.3            # apt-get, deafult: 1.3
-#  - spades/3.15.4        # apt-get, default: 3.13.1
+#  - spades/3.15.4        # from src, installed: 3.15.4
 #  - ucsc/418             # personal mirror: snapshot Nov 2nd, 2020
 LABEL maintainer=kuhnsa@nih.gov
 
+############### INIT ################
 # Create Container filesystem specific 
 # working directory and opt directories
 # to avoid collisions with the host's
@@ -32,6 +33,7 @@ ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
         && echo $TZ > /etc/timezone
 
+############### SETUP ################
 # This section installs system packages 
 # required for your project. If you need 
 # extra system packages add them here.
@@ -73,22 +75,31 @@ RUN apt-get update \
         libfreetype6-dev \
         libpng-dev \
         libboost-all-dev \
+        # spades dependencies below
+        bamtools \
+        bwa \
+        libhat-trie0 \
+        libnlopt0 \
+        libssw0 \
     && apt-get clean && apt-get purge \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Make python3 the default interpreter
 # and install Python Packages, metaquast 
 # requires matplotlib python package, 
-# install multiqc/1.12 (latest)
+# install multiqc/1.12 (latest), spades
+# requires joblib, pyyaml (yaml)
 RUN ln -sf /usr/bin/python3.8 /usr/bin/python
 RUN pip3 install --upgrade pip \
-	    && pip3 install argparse \
-	    && pip3 install numpy \
+	&& pip3 install argparse \
+	&& pip3 install numpy \
         && pip3 install pysam \
-	    && pip3 install scipy \
+	&& pip3 install scipy \
         && pip3 install matplotlib \
         && pip3 install setuptools \
-        && pip3 install multiqc==1.12
+        && pip3 install multiqc==1.12 \
+        && pip3 install pyyaml \
+        && pip3 install joblib
 
 # Installl Perl Libraries, GD::Graph::bars 
 # is required for fastq_screen, metaquast
@@ -102,6 +113,7 @@ RUN cpanm FindBin Term::ReadLine \
 # Set the locale
 RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
+############### INSTALL ################
 # Install any bioinformatics tools
 # available with apt-get on Ubuntu/20.04
 RUN apt-get update \
@@ -121,11 +133,10 @@ RUN apt-get update \
         samtools \
         # seqtk/1.3
         seqtk \
-        # spades/3.13.1
-        spades \
     && apt-get clean && apt-get purge \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+############### MANUAL ################
 # Install fastq_screen/0.15.2 manually, 
 # not available to apt-get on Ubuntu/20.04.
 # Dependencies already satisfied:
@@ -184,7 +195,6 @@ RUN wget https://github.com/voutcn/megahit/releases/download/v1.2.9/MEGAHIT-1.2.
 ENV PATH="/opt2/MEGAHIT-1.2.9-Linux-x86_64-static/bin:$PATH"
 WORKDIR /opt2
 
-
 # Install metaquast/5.0.2 manually, 
 # not available to apt-get on Ubuntu/20.04.
 # Dependencies already satisfied:
@@ -202,15 +212,27 @@ WORKDIR /opt2
 # not been satisfied:
 #  - prodigal
 #  - diamond (bundled with CAT Prep ref)
-# Install prodigal/2.6.3
+# @Install prodigal/2.6.3
 RUN wget https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux \
         && chmod +x /opt2/prodigal.linux \
         && mv /opt2/prodigal.linux /opt2/prodigal
-# Install CAT/5.2.3
+# @Install CAT/5.2.3
 RUN wget https://github.com/dutilh/CAT/archive/refs/tags/v5.2.3.tar.gz \
         && tar -xvzf v5.2.3.tar.gz \
         && rm /opt2/v5.2.3.tar.gz
+# Add CAT to $PATH
 ENV PATH="/opt2/CAT-5.2.3/CAT_pack:$PATH"
+WORKDIR /opt2
+
+# Install spades/3.15.4 manually, latest version
+# not available to apt-get on Ubuntu/20.04.
+# Dependencies already satisfied:
+RUN wget http://cab.spbu.ru/files/release3.15.4/SPAdes-3.15.4-Linux.tar.gz \
+        && tar -xvzf SPAdes-3.15.4-Linux.tar.gz  \
+        && rm /opt2/SPAdes-3.15.4-Linux.tar.gz 
+# Add metaspades to $PATH
+ENV PATH="/opt2/SPAdes-3.15.4-Linux/bin:$PATH"
+WORKDIR /opt2
 
 # Add Dockerfile and export environment 
 # variables and set java8 as default with links
