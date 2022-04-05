@@ -52,8 +52,8 @@ rule rawfastqc:
         rname='rawfqc',
         outdir=join(workpath,"{name}","rawQC"),
     threads: int(allocated("threads", "rawfastqc", cluster))
-    envmodules: config['tools']['fastqc']
-    # container: config['images']['fastqc']
+    # envmodules: config['tools']['fastqc']
+    container: config['images']['metavirs']
     shell: """
     fastqc {input} \\
         -t {threads} \\
@@ -82,8 +82,8 @@ rule trim:
         rname='trimfq',
         adapters=config['references']['adapters'],
     threads: int(allocated("threads", "trim", cluster))
-    envmodules: config['tools']['cutadapt']
-    # container: config['images']['cutadapt']
+    # envmodules: config['tools']['cutadapt']
+    container: config['images']['metavirs']
     shell: """
     cutadapt -j {threads} \\
         --pair-filter=any \\
@@ -119,8 +119,8 @@ rule fastqc:
         rname='fqc',
         outdir=join(workpath,"{name}","QC"),
     threads: int(allocated("threads", "fastqc", cluster))
-    envmodules: config['tools']['fastqc']
-    # container: config['images']['fastqc']
+    # envmodules: config['tools']['fastqc']
+    container: config['images']['metavirs']
     shell: """
     fastqc {input} \\
         -t {threads} \\
@@ -151,9 +151,8 @@ rule remove_host:
         rname='rmhost',
         host_index=join(config['references']['host_bowtie2_index'], 'Hosts')
     threads: int(allocated("threads", "remove_host", cluster))
-    envmodules: 
-        config['tools']['bowtie'],
-        config['tools']['samtools']
+    # envmodules: config['tools']['bowtie'], config['tools']['samtools']
+    container: config['images']['metavirs']
     shell: """
     # Align against host to remove contamination
     bowtie2 -p {threads} \\
@@ -199,9 +198,8 @@ rule kraken_viral:
         viral_db=config['references']['kraken2_viral_db'],
         krona_ref=config['references']['kronatools'],
     threads: int(allocated("threads", "kraken_viral", cluster))
-    envmodules: 
-        config['tools']['kraken'],
-        config['tools']['kronatools']
+    # envmodules: config['tools']['kraken'], config['tools']['kronatools']
+    container: config['images']['metavirs']
     shell: """
     # Run kraken against viral database
     kraken2 --threads {threads} \\
@@ -256,14 +254,11 @@ rule metaspades:
         cat_dep=config['references']['CAT_diamond'],
         cat_dir=join(workpath,"{name}","CAT"),
     threads: int(allocated("threads", "metaspades", cluster))
-    conda: config['conda']['CAT']
-    envmodules: 
-        config['tools']['spades'],
-        config['tools']['kraken'],
-        config['tools']['kronatools'],
-        config['tools']['seqtk'],
-        config['tools']['bowtie'],
-        config['tools']['samtools']
+    # conda: config['conda']['CAT']
+    # envmodules: 
+    #    config['tools']['spades'], config['tools']['kraken'], config['tools']['kronatools'],
+    #    config['tools']['seqtk'], config['tools']['bowtie'], config['tools']['samtools']
+    container: config['images']['metavirs']
     shell: """
     set -x
     mkdir -p {wildcards.name}/metaspades
@@ -384,14 +379,11 @@ rule megahit:
         cat_dep=config['references']['CAT_diamond'],
         cat_dir=join(workpath,"{name}","CAT")
     threads: int(allocated("threads", "megahit", cluster))
-    conda: config['conda']['CAT']
-    envmodules: 
-        config['tools']['megahit'],
-        config['tools']['kraken'],
-        config['tools']['kronatools'],
-        config['tools']['seqtk'],
-        config['tools']['bowtie'],
-        config['tools']['samtools']
+    # conda: config['conda']['CAT']
+    # envmodules: 
+    #     config['tools']['megahit'], config['tools']['kraken'], config['tools']['kronatools'],
+    #     config['tools']['seqtk'], config['tools']['bowtie'], config['tools']['samtools']
+    container: config['images']['metavirs']
     shell: """
     set -x
     mkdir -p {wildcards.name}/megahit
@@ -498,9 +490,8 @@ rule krona:
         rname='krona',
         krona_ref=config['references']['kronatools'],
     threads: int(allocated("threads", "krona", cluster))
-    envmodules:
-        config['tools']['kraken'],
-        config['tools']['kronatools'],
+    # envmodules: config['tools']['kraken'], config['tools']['kronatools'],
+    container: config['images']['metavirs']
     shell: """
     ktImportTaxonomy \\
         -tax {params.krona_ref} \\
@@ -535,8 +526,8 @@ rule prep_metaquast:
         ncbi_viral=config['references']['ncbi_viral_fasta'],
         outdir=join(workpath,"{name}","temp","metaquastref"),
     threads: int(allocated("threads", "prep_metaquast", cluster))
-    envmodules:
-        config['tools']['ucsc']
+    # envmodules: config['tools']['ucsc']
+    container: config['images']['metavirs']
     shell: """
     awk -F '\\t' '{{if ($4 ~ "S") print $6}}' \\
         {input.report} \\
@@ -578,8 +569,7 @@ rule metaquast:
         ref=join(workpath,"{name}","temp","metaquastref"),
         outdir=join(workpath,"{name}","output","{name}_metaquast"),
     threads: int(allocated("threads", "metaquast", cluster))
-    container:
-        config['images']['metaquast']
+    container: config['images']['metavirs']
     shell: """
     metaquast.py \\
         {input.metaspades} \\

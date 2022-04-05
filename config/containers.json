@@ -6,6 +6,7 @@
         "fastqvalidator": "/data/NCBR/dev/SIFs/ccbr_fastqvalidator_v0.1.0.sif",
         "kraken": "/data/NCBR/dev/SIFs/ccbr_kraken_v2.1.1_v0.0.1.sif",
         "metaquast": "/data/NCBR/dev/SIFs/quast_5.0.2--py27pl526ha92aebf_0.sif",
+        "metavirs": "docker://skchronicles/metavirs:v0.1.0",
         "multiqc": "/data/NCBR/dev/SIFs/ccbr_multiqc_1.9_v0.0.1.sif",
         "python": "/data/NCBR/dev/SIFs/ccbr_python_v0.0.1.sif"
     }

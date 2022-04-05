@@ -24,8 +24,8 @@ rule fc_lane:
         rname='fc_lane',
         get_flowcell_lanes=join("workflow", "scripts", "get_flowcell_lanes.py"),
     threads: int(allocated("threads", "fc_lane", cluster))
-    envmodules: config['tools']['python']
-    container: config['images']['python']
+    # envmodules: config['tools']['python']
+    container: config['images']['metavirs']
     shell: """
     python {params.get_flowcell_lanes} \\
         {input.r1} \\
