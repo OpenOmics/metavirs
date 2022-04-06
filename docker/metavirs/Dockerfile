@@ -11,7 +11,7 @@ FROM ubuntu:20.04
 #  - kraken/2.1.1         # from src, installed: 2.1.2
 #  - kronatools/2.8       # from src, installed: 2.8.1
 #  - megahit/1.2.9        # from src, installed: 1.2.9
-#  - quast/5.0.2          # from src, installed: 5.0.2
+#  - quast/5.0.2          # from src, installed: 5.1.0rc1 
 #  - multiqc/1.12         # from src, installed: 1.12
 #  - python/3.8           # apt-get, default: 3.8.2
 #  - samtools/1.15        # apt-get, default: 1.10
@@ -195,14 +195,14 @@ RUN wget https://github.com/voutcn/megahit/releases/download/v1.2.9/MEGAHIT-1.2.
 ENV PATH="/opt2/MEGAHIT-1.2.9-Linux-x86_64-static/bin:$PATH"
 WORKDIR /opt2
 
-# Install metaquast/5.0.2 manually, 
+# Install metaquast/5.1.0rc1 manually, 
 # not available to apt-get on Ubuntu/20.04.
 # Dependencies already satisfied:
 # https://github.com/ablab/quast
-RUN wget https://github.com/ablab/quast/releases/download/quast_5.0.2/quast-5.0.2.tar.gz \
-        && tar -xvzf quast-5.0.2.tar.gz \
-        && rm /opt2/quast-5.0.2.tar.gz \
-        && cd /opt2/quast-5.0.2/ \
+RUN wget https://github.com/ablab/quast/releases/download/quast_5.1.0rc1/quast-5.1.0rc1.tar.gz \
+        && tar -xvzf quast-5.1.0rc1.tar.gz \
+        && rm /opt2/quast-5.1.0rc1.tar.gz \
+        && cd /opt2/quast-5.1.0rc1/ \
         && ./setup.py install
 WORKDIR /opt2
 
@@ -234,12 +234,12 @@ RUN wget http://cab.spbu.ru/files/release3.15.4/SPAdes-3.15.4-Linux.tar.gz \
 ENV PATH="/opt2/SPAdes-3.15.4-Linux/bin:$PATH"
 WORKDIR /opt2
 
+################ POST #################
 # Add Dockerfile and export environment 
 # variables and set java8 as default with links
 # to alternative versions
 ADD Dockerfile /opt2/metavirs.dockerfile
 RUN chmod -R a+rX /opt2 \
-        && ln -s /usr/lib/jvm/java-8-openjdk-amd64/bin/java /usr/bin/java8 \
-        && ln -fs /usr/lib/jvm/java-8-openjdk-amd64/bin/java /usr/bin/java
+        && ln -s /usr/lib/jvm/java-8-openjdk-amd64/bin/java /usr/bin/java8 
 ENV PATH="/opt2:$PATH"
 WORKDIR /data2
