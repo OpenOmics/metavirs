@@ -27,7 +27,7 @@ rule fc_lane:
     # envmodules: config['tools']['python']
     container: config['images']['metavirs']
     shell: """
-    python {params.get_flowcell_lanes} \\
+    python2 {params.get_flowcell_lanes} \\
         {input.r1} \\
         {wildcards.name} > {output.info}
     """
