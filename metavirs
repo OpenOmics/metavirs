@@ -322,7 +322,7 @@ def parsed_arguments(name, description):
         Example:
           # Step 1.) Grab an interactive node,
           # do not run on head node!
-          srun -N 1 -n 1 --time=8:00:00 -p int --mem=16gb  --cpus-per-task=4 --pty bash
+          srun -N 1 -n 1 --time=8:00:00 --mem=8gb  --cpus-per-task=2 --pty bash
           module purge
           module load singularity snakemake
 
