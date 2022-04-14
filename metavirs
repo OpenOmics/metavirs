@@ -214,6 +214,7 @@ def parsed_arguments(name, description):
     # Create a top-level parser
     c = Colors     # add styled logo
     styled_name = "{}{}{}meta{}virs{}".format(c.bold, c.bg_black, c.white, c.cyan, c.end)
+    description = "{}{}{}".format(c.bold, description, c.end)
     parser = argparse.ArgumentParser(description = '{}: {}'.format(styled_name, description))
 
     # Adding Verison information
@@ -229,7 +230,7 @@ def parsed_arguments(name, description):
     # options that are required! Please note: if a required arg is added the
     # description below should be updated (i.e. update usage and add new option)
     required_run_options = textwrap.dedent("""\
-        {0}: {3}{1}
+        {0}: {1}
 
         {3}Synopsis:{4} 
           $ {2} run [--help] [--mode <slurm,local>] [--job-name JOB_NAME] \\
@@ -464,7 +465,7 @@ def parsed_arguments(name, description):
     # options that are required! Please note: if a required arg is added the
     # description below should be updated (i.e. update usage and add new option)
     required_unlock_options = textwrap.dedent("""\
-        {0}: {3}{1}
+        {0}: {1}
 
         {3}Synopsis:{4} 
           $ {2} unlock [-h] --output OUTPUT
@@ -531,7 +532,7 @@ def parsed_arguments(name, description):
     # options that are required! Please note: if a required arg is added the
     # description below should be updated (i.e. update usage and add new option)
     required_cache_options = textwrap.dedent("""\
-        {0}: {3}{1}
+        {0}: {1}
 
         {3}Synopsis:{4} 
           $ {2} cache [-h] [--dry-run] --sif-cache SIF_CACHE
