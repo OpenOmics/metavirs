@@ -344,6 +344,7 @@ def bind(sub_args, config):
     working_directory =  os.path.realpath(config['project']['workpath'])
     genome_bind_paths = resolve_additional_bind_paths(bindpaths)
     bindpaths = [working_directory] + rawdata_bind_paths +  genome_bind_paths
+    bindpaths = set([p for p in bindpaths if p != '/'])
 
     return bindpaths
 

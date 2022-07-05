@@ -189,7 +189,7 @@ function submit(){
           # --cluster-config os.path.join({outdir}, 'config', 'cluster.json') 
           # --cluster {CLUSTER_OPTS} --stats os.path.join({outdir}, 'logfiles', 'runtime_statistics.json') 
           # --printshellcmds --keep-going --rerun-incomplete 
-          # --keep-remote --restart-times 3 -j 500 --use-singularity 
+          # --keep-remote --restart-times 3 -j 50 --use-singularity 
           # --singularity-args -B {}.format({bindpaths}) --local-cores 24
           SLURM_DIR="$3/logfiles/slurmfiles"
           CLUSTER_OPTS="sbatch --gres {cluster.gres} --cpus-per-task {cluster.threads} -p {cluster.partition} -t {cluster.time} --mem {cluster.mem} --job-name={params.rname} -e $SLURM_DIR/slurm-%j_{params.rname}.out -o $SLURM_DIR/slurm-%j_{params.rname}.out"
@@ -225,7 +225,7 @@ snakemake --latency-wait 120 -s "$3/workflow/Snakefile" -d "$3" \\
   --use-singularity --singularity-args "'-B $4'" \\
   --use-envmodules --configfile="$3/config.json" \\
   --printshellcmds --cluster-config "$3/config/cluster.json" \\
-  --cluster "${CLUSTER_OPTS}" --keep-going --restart-times 3 -j 500 \\
+  --cluster "${CLUSTER_OPTS}" --keep-going --restart-times 3 -j 50 \\
   --rerun-incomplete --stats "$3/logfiles/runtime_statistics.json" \\
   --keep-remote --local-cores 14 2>&1
 EOF
