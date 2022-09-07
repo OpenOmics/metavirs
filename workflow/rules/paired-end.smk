@@ -678,6 +678,6 @@ rule aggregate:
         -o {output.krona} \\
         {output.f1} \\
         {output.f2} \\
-        {output.f3} \\ 
+        {output.f3} \\
         {output.f4}
     """
