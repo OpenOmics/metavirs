@@ -258,7 +258,7 @@ def parsed_arguments(name, description):
                                   Example: --output /data/$USER/output
 
         {3}Analysis options:{4}
-        --aggregate             Aggregate contig annotation results into one mutli-
+          --aggregate           Aggregate contig annotation results into one mutli-
                                 sample, project-level interactive Krona report. By
                                 default, any resulting reports will be created at 
                                 a per-sample level.
