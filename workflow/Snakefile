@@ -10,7 +10,8 @@ from snakemake.workflow import workflow as wf_api
 from scripts.common import (
     provided, 
     references,
-    allocated
+    allocated,
+    str_bool
 )
 
 # Global workflow variables
@@ -19,6 +20,11 @@ samples  = config['samples']              # Base name of input samples
 workpath = config['project']['workpath']  # Pipeline's output directory
 filetype = config['project']['filetype']  # 'paired-end' or 'single-end' (not supported)
 tmpdir = config['options']['tmp_dir']     # Temporary directory
+
+# Analysis Options 
+do_aggregate = str_bool(                  # Aggregate results into single report,
+    config['options']['aggregate']        # default: False
+)
 
 # Read in resource information,
 # containing information about 
@@ -122,4 +128,14 @@ rule all:
         expand(
             join(workpath,"{name}","output","{name}_metaquast","report.html"),
             name=samples
+        ),
+        # Krona, project-level multi-sample report
+        # @imported from rules/paired-end.smk
+        expand(
+            join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"),
+            name=provided(samples, do_aggregate),
+        ),
+        provided(
+            [join(workpath,"Project","Project.contig.classification.html")],
+            do_aggregate
         )

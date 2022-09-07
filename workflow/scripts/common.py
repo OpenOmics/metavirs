@@ -151,6 +151,39 @@ def allocated(resource, rule, lookup, default="__default__"):
     return allocation
 
 
+def str_bool(s):
+    """Converts a string to boolean. It is dangerous to try to
+    typecast a string into a boolean value using the built-in 
+    `bool()` function. This function avoids any issues that can
+    arise when using `bool()`. 
+    Example:
+      boolean('True') returns True
+      boolean('False') returns False
+      boolean('asdas') raises TypeError
+    """
+    val = s.lower()
+    if val in ['true', '1', 'y', 'yes']:
+        return True
+    elif val in ['false', '0', 'n', 'no', '']:
+        return False
+    else:
+        # Provided value could not be
+        # type casted into a boolean
+        raise TypeError('Fatal: cannot type cast {} into a boolean'.format(val))
+
+
+def joint_option(prefix, valueslist):
+    """Joins a list while adding a common prefix.
+    Example:
+      joint_option('-i', [1,2,3])
+      '-i 1 -i 2 -i 3'
+    """
+    s = ""
+    for v in valueslist:
+        s += "{} {} ".format(prefix, v)
+    s = s.rstrip()
+    return s
+
 
 if __name__ == '__main__':
     # Unit-testing
