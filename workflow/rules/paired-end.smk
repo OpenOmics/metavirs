@@ -581,3 +581,103 @@ rule metaquast:
         -o {params.outdir} \\
         --threads {threads}
     """
+
+
+rule prep_aggregate:
+    """
+    Data-processing step to prep input for the aggregated Krona report. Sample
+    names are added to text files prior to project-level aggregation.
+    @Input:
+        Annotated contigs from metaspades and megahit (gather per-sample)
+    @Output:
+        Annotated contigs with sample names
+    """
+    input:
+        f1=join(workpath,"{name}","temp","{name}.metaspades_kraken2.txt"),
+        f2=join(workpath,"{name}","temp","{name}.megahit_kraken2.txt"),
+        f3=join(workpath,"{name}","temp","{name}.metaspades_CAT.txt"),
+        f4=join(workpath,"{name}","temp","{name}.megahit_CAT.txt"),
+    output:
+        f1=join(workpath,"Project","temp","{name}.metaspades.contigs.kraken2.krona.meta"),
+        f2=join(workpath,"Project","temp","{name}.megahit.contigs.kraken2.krona.meta"),
+        f3=join(workpath,"Project","temp","{name}.metaspades.contigs.CAT.krona.meta"),
+        f4=join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"),
+    params:
+        rname='prepagg',
+        sample='{name}',
+    threads: int(allocated("threads", "prep_aggregate", cluster))
+    container: config['images']['metavirs']
+    shell: """
+    awk -v var="{params.sample}" \\
+        '{{print var"_"$0}}' \\
+        {input.f1} \\
+    > {output.f1}
+    awk -v var="{params.sample}" \\
+        '{{print var"_"$0}}' \\
+        {input.f2} \\
+    > {output.f2}
+    awk -v var="{params.sample}" \\
+        '{{print var"_"$0}}' \\
+        {input.f3} \\
+    > {output.f3}
+    awk -v var="{params.sample}" \\
+        '{{print var"_"$0}}' \\
+        {input.f4} \\
+    > {output.f4}
+    """
+
+
+rule aggregate:
+    """
+    Data-processing step to create a project-level, multi-sample aggregated 
+    interactive Krona report.
+    @Input:
+        Annotated contigs with sample names (gather all-samples)
+    @Output:
+        Multi-sample aggregated Krona report
+    """
+    input:
+        f1=expand(join(workpath,"Project","temp","{name}.metaspades.contigs.kraken2.krona.meta"), name=samples), 
+        f2=expand(join(workpath,"Project","temp","{name}.megahit.contigs.kraken2.krona.meta"), name=samples),
+        f3=expand(join(workpath,"Project","temp","{name}.metaspades.contigs.CAT.krona.meta"), name=samples),
+        f4=expand(join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"), name=samples),
+    output:
+        f1=join(workpath,"Project","temp","metaspades_kraken2.krona"),
+        f2=join(workpath,"Project","temp","megahit_kraken2.krona"),
+        f3=join(workpath,"Project","temp","metaspades_CAT.krona"),
+        f4=join(workpath,"Project","temp","megahit_CAT.krona"),
+        krona=join(workpath,"Project","Project.contig.classification.html"),
+    params:
+        search=join(workpath,"Project","temp"),
+        rname='aggrpt',
+        krona_ref=config['references']['kronatools'],
+    threads: int(allocated("threads", "aggregate", cluster))
+    container: config['images']['metavirs']
+    shell: """
+    # Create aggregated contig annotations
+    find {params.search} \\
+        -name '*.metaspades.contigs.kraken2.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f1}
+    find {params.search} \\
+        -name '*.megahit.contigs.kraken2.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f2}
+    find {params.search} \\
+        -name '*.metaspades.contigs.CAT.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f3}
+    find {params.search} \\
+        -name '*.megahit.contigs.CAT.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f4}
+    # Generate multi-sample report
+    ktImportTaxonomy \\
+        -tax {params.krona_ref} \\
+        -m 3 \\
+        -o {output.krona} \\
+        {output.f1} \\
+        {output.f2} \\
+        {output.f3} \\ 
+        {output.f4}
+    """

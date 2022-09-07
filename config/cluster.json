@@ -60,5 +60,15 @@
         "threads": "32",
         "mem": "64g",
         "time": "0-18:00:00"
+    },
+    "prep_aggregate": {
+        "threads": "4",
+        "mem": "8g",
+        "time": "0-6:00:00"
+    },
+    "aggregate": {
+        "threads": "4",
+        "mem": "24g",
+        "time": "0-18:00:00"
     }
 }
