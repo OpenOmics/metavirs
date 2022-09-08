@@ -162,3 +162,13 @@ site/
 
 # Notes
 NOTES.txt
+
+# Temp files
+*.tmp
+**/*.tmp
+
+# Test script and test 
+# output directories
+test.sh
+test_*/
+viral_*/
