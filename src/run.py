@@ -458,14 +458,11 @@ def add_rawdata_information(sub_args, config, ifiles):
          Updated config dictionary containing user information (username and home directory)
     """
     
-    # Determine whether dataset is paired-end
-    # or single-end
-    # Updates config['project']['nends'] where
-    # 1 = single-end, 2 = paired-end, -1 = bams
-    convert = {1: 'single-end', 2: 'paired-end', -1: 'bam'}
-    nends = get_nends(ifiles)  # Checks PE data for both mates (R1 and R2)
-    config['project']['nends'] = nends
-    config['project']['filetype'] = convert[nends]
+    # Determine whether dataset is single-end, 
+    # paired-end, mixed (both SE and PE)
+    sample2endtype, globalendtype = get_nends(ifiles)  # Checks PE data for both mates (R1 and R2)
+    config['project']['nends'] = sample2endtype
+    config['project']['filetype'] = globalendtype
 
     # Finds the set of rawdata directories to bind
     rawdata_paths = get_rawdata_bind_paths(input_files = sub_args.input)
@@ -523,62 +520,61 @@ def get_nends(ifiles):
     @return nends_status <int>:
          Integer reflecting nends status: 1 = se, 2 = pe, -1 = bams
     """
-    # Determine if dataset contains paired-end data
-    paired_end = False
-    bam_files = False
-    nends_status = 1
+    # Determine each samples 
+    # paired-end status, i.e. 
+    # determine if its single
+    # end or paired-end
+    exts = {'R1': set(), 'R2': set()} 
     for file in ifiles:
-        if file.endswith('.bam'):
-            bam_files = True
-            nends_status = -1
-            break
-        elif file.endswith('.R2.fastq.gz'):
-            paired_end = True
-            nends_status = 2
-            break # dataset is paired-end
+        # Split sample name on file extension
+        file = os.path.basename(file).rstrip()
+        sample = re.split('\.R[12]\.fastq\.gz', file)[0]
+        # Determine end type, i.e. se or pe
+        if file.endswith('.R1.fastq.gz'):
+            extension = 'R1'
+        else:
+            extension = 'R2'
+        exts[extension].add(sample)
+    
+    # Check if R1 is missing
+    missing_mates = []
+    for s in exts['R2']:
+        # check to see if R1 exists
+        if s not in exts['R1']:
+            missing_mates.append(s)
 
-    # Check to see if both mates (R1 and R2) 
-    # are present paired-end data
-    if paired_end:
-        nends = {} # keep count of R1 and R2 for each sample
-        for file in ifiles:
-            # Split sample name on file extension
-            sample = re.split('\.R[12]\.fastq\.gz', os.path.basename(file))[0]
-            if sample not in nends:
-                nends[sample] = 0
-
-            nends[sample] += 1
-
-        # Check if samples contain both read mates
-        missing_mates = [sample for sample, count in nends.items() if count == 1]
-        if missing_mates:
-            # Missing an R1 or R2 for a provided input sample
-            raise NameError("""\n\tFatal: Detected pair-end data but user failed to provide
-                both mates (R1 and R2) for the following samples:\n\t\t{}\n
-                Please check that the basename for each sample is consistent across mates.
-                Here is an example of a consistent basename across mates:
-                  consistent_basename.R1.fastq.gz
-                  consistent_basename.R2.fastq.gz
-
-                Please do not run the pipeline with a mixture of single-end and paired-end
-                samples. This feature is currently not supported within {}, and it is
-                not recommended either. If this is a priority for your project, please run
-                paired-end samples and single-end samples separately (in two separate output 
-                directories). If you feel like this functionality should exist, feel free to 
-                open an issue on Github.
-                """.format(missing_mates, sys.argv[0])
-            )
-    elif not bam_files:
-        # Provided only single-end data
-        # not supported or recommended
-        raise TypeError("""\n\tFatal: Single-end data detected.
-            {} does not support single-end data. Calling variants from single-end
-            data is not recommended either. If you feel like this functionality should 
-            exist, feel free to open an issue on Github.
-            """.format(sys.argv[0])
+    if missing_mates:
+        # Sample contains R2 but no R1
+        fatal(
+            """\n\tFatal: Detected pair-end data but user failed to provide
+            both mates (R1 and R2) for the following samples:\n\t\t{}\n
+            Please check that the basename for each sample is consistent across mates.
+            Here is an example of a consistent basename across mates:
+              consistent_basename.R1.fastq.gz
+              consistent_basename.R2.fastq.gz
+            """.format(missing_mates)
         )
+    
+    # Create a sample dictionary, where 
+    # keys are R1 and values are R2, 
+    # i.e {"se":"", "pe":"pe"}
+    sp = {}
+    status = 'single-end'
+    for s in exts['R1']:
+        r1 = s
+        r2 = ''
+        if s in exts['R2']:
+            r2 = s
+            status = 'paired-end'
+        sp[r1] = r2
+    
+    # Determine whether contains a mix of SE and PE
+    r1s = len(list(sp.keys()))
+    r2s = len([s for s in sp.values() if s])
+    if r1s != r2s and r2s > 0:
+        status = 'mixed'
 
-    return nends_status
+    return sp, status
 
 
 def get_rawdata_bind_paths(input_files):
@@ -630,7 +626,7 @@ def dryrun(outdir, config='config.json', snakefile=os.path.join('workflow', 'Sna
             # Failure caused by unknown cause, raise error
             raise e
     except subprocess.CalledProcessError as e:
-        print(e, e.output)
+        print(e, e.output.decode("utf-8"))
         raise(e)
 
     return dryrun_output

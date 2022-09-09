@@ -20,6 +20,11 @@ samples  = config['samples']              # Base name of input samples
 workpath = config['project']['workpath']  # Pipeline's output directory
 filetype = config['project']['filetype']  # 'paired-end' or 'single-end' (not supported)
 tmpdir = config['options']['tmp_dir']     # Temporary directory
+nends = config['project']['nends']        # paired-end of a sample: k=SE, values=PE
+
+# Separate Single and Paired-end Samples
+se_samples = list(config['project']['nends'].keys())
+pe_samples = [s for s in config['project']['nends'].values() if s]
 
 # Analysis Options 
 do_aggregate = str_bool(                  # Aggregate results into single report,
@@ -49,9 +54,10 @@ rule all:
             join(workpath,"{name}","rawQC","{name}.validated.R1.fastq.log"), 
             name=provided(samples, wf_api.use_singularity)
         ),
+        # Only generated if sample is paired-end 
         expand(
             join(workpath,"{name}","rawQC","{name}.validated.R2.fastq.log"), 
-            name=provided(samples, wf_api.use_singularity)
+            name=provided(pe_samples, wf_api.use_singularity)
         ),
         # Extract Flowcell Lane information
         # @imported from rules/common.smk
@@ -66,15 +72,8 @@ rule all:
             name=samples
         ),
         expand(
-            join(workpath,"{name}","rawQC","{name}.R2_fastqc.zip"), 
-            name=samples
-        ),
-        expand(
             join(workpath,"{name}","QC","{name}.R1.trim_fastqc.zip"), 
             name=samples
-        ),
-        expand(join(workpath,"{name}","QC","{name}.R2.trim_fastqc.zip"), 
-        name=samples
         ),
         # Cutadapt, remove adapter sequences
         # @imported from rules/paired-end.smk
@@ -82,18 +81,10 @@ rule all:
             join(workpath,"{name}","trim","{name}.R1.trim.fastq"), 
             name=samples
         ),
-        expand(
-            join(workpath,"{name}","trim","{name}.R2.trim.fastq"), 
-            name=samples
-        ),
         # Remove Host contamination
         # @imported from rules/paired-end.smk
         expand(
             join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"), 
-            name=samples
-        ),
-        expand(
-            join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"), 
             name=samples
         ),
         # Kraken2, viral taxonomic classification

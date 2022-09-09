@@ -1,9 +1,53 @@
 # Paired-end snakemake rules imported in the main Snakefile.
 from scripts.common import abstract_location, references, allocated
 
+# Helper functions for running rules with
+# mixed input for single-end and paired-end
+# datasets 
+def get_r2_raw_fastq(wildcards):
+    """
+    Returns a samples R2 fastq file
+    if it is paired-end data.
+    """
+    r2 = nends[wildcards.name]
+    if r2:
+        # Runs in paired-end mode
+        return join(workpath,"{0}.R2.fastq.gz".format(r2))
+    else:
+        # Runs in single-end mode
+        return []
+
+
+def get_r2_trim_fastq(wildcards):
+    """
+    Returns a samples trimmed R2 fastq file
+    if it is paired-end data.
+    """
+    r2 = nends[wildcards.name]
+    if r2:
+        # Runs in paired-end mode
+        return join(workpath,"{0}".format(r2),"trim","{0}.R2.trim.fastq".format(r2))
+    else:
+        # Runs in single-end mode
+        return []
+
+
+def get_r2_host_removed_fastq(wildcards):
+    """
+    Returns a samples trimmed, host removed R2 fastq file
+    if it is paired-end data.
+    """
+    r2 = nends[wildcards.name]
+    if r2:
+        # Runs in paired-end mode
+        return join(workpath,"{0}".format(r2),"trim","{0}.R2.trim.host_removed.fastq.gz".format(r2))
+    else:
+        # Runs in single-end mode
+        return []
+
 
 # Pre alignment QC-related rules
-rule validator:
+rule validator_r1:
     """
     Quality-control step to ensure the input FastQC files are not corrupted or
     incomplete prior to running the entire workflow. Please note this rule will
@@ -15,20 +59,45 @@ rule validator:
     """
     input:
         r1=join(workpath,"{name}.R1.fastq.gz"),
-        r2=join(workpath,"{name}.R2.fastq.gz"),
     output:
-        log1=join(workpath,"{name}","rawQC","{name}.validated.R1.fastq.log"),
-        log2=join(workpath,"{name}","rawQC","{name}.validated.R2.fastq.log"),
+        log=join(workpath,"{name}","rawQC","{name}.validated.R1.fastq.log"),
     params:
-        rname='validfq',
+        rname='validfqr1',
         outdir=join(workpath,"{name}","rawQC"),
+    threads: int(allocated("threads", "validator_r1", cluster))
     container: config['images']['fastqvalidator']
     shell: """
     mkdir -p {params.outdir}
     fastQValidator --noeof \\
-        --file {input.r1} > {output.log1}
+        --file {input.r1} \\
+    > {output.log}
+    """
+
+
+rule validator_r2:
+    """
+    Quality-control step to ensure the input FastQC files are not corrupted or
+    incomplete prior to running the entire workflow. Please note this rule will
+    only run if the --use-singularity flag is provided to snakemake.
+    @Input:
+        Raw FastQ file (scatter)
+    @Output:
+        Log file containing any warnings or errors on file
+    """
+    input:
+        r2=join(workpath,"{name}.R2.fastq.gz"),
+    output:
+        log=join(workpath,"{name}","rawQC","{name}.validated.R2.fastq.log"),
+    params:
+        rname='validfqr2',
+        outdir=join(workpath,"{name}","rawQC"),
+    threads: int(allocated("threads", "validator_r2", cluster))
+    container: config['images']['fastqvalidator']
+    shell: """
+    mkdir -p {params.outdir}
     fastQValidator --noeof \\
-        --file {input.r2} > {output.log2}
+        --file {input.r2} \\
+    > {output.log}
     """
 
 
@@ -44,10 +113,9 @@ rule rawfastqc:
     """
     input:
         join(workpath,"{name}.R1.fastq.gz"),
-        join(workpath,"{name}.R2.fastq.gz"),
+        get_r2_raw_fastq,
     output:
         join(workpath,"{name}","rawQC","{name}.R1_fastqc.zip"),
-        join(workpath,"{name}","rawQC","{name}.R2_fastqc.zip"),
     params:
         rname='rawfqc',
         outdir=join(workpath,"{name}","rawQC"),
@@ -74,28 +142,45 @@ rule trim:
     """
     input:
         r1=join(workpath,"{name}.R1.fastq.gz"),
-        r2=join(workpath,"{name}.R2.fastq.gz"),
+        r2=get_r2_raw_fastq,
     output:
         r1=join(workpath,"{name}","trim","{name}.R1.trim.fastq"),
-        r2=join(workpath,"{name}","trim","{name}.R2.trim.fastq"),
     params:
         rname='trimfq',
         adapters=config['references']['adapters'],
+        # Building single-end and paired-end options
+        # --pair-filter: PE='--pair-filter=any', SE=''
+        pair_filter_option = lambda w: "--pair-filter=any" \
+            if nends[w.name] else "",
+        # -m: PE='-m 35:35', SE='-m 35'
+        m_option = lambda w: "-m {0}".format(
+            "35:35"
+        ) if nends[w.name] else "-m 35",
+        # -B: PE='-B file:{params.adapters}', SE=''
+        B_option = lambda w: "-B file:{0}".format(
+            config['references']['adapters']
+        ) if nends[w.name] else "",
+        # -p: PE='-p {output.r2}', SE=''
+        p_option = lambda w: "-p {0}.R2.trim.fastq".format(
+            join(workpath, w.name, "trim", w.name)
+        ) if nends[w.name] else "",
+        # Input R2 FastQ file: PE='{input.r2}', SE=''
+        r2_option = lambda w: "{0}.R2.fastq.gz".format(
+            join(workpath, w.name)
+        ) if nends[w.name] else "",
     threads: int(allocated("threads", "trim", cluster))
     # envmodules: config['tools']['cutadapt']
     container: config['images']['metavirs']
     shell: """
-    cutadapt -j {threads} \\
-        --pair-filter=any \\
+    cutadapt -j {threads} {params.pair_filter_option} \\
         --nextseq-trim=2 \\
         --trim-n \\
         -n 5 -O 5 \\
         -q 10,10 \\
-        -m 35:35 \\
-        -b file:{params.adapters} \\
-        -B file:{params.adapters} \\
-        -o {output.r1} -p {output.r2} \\
-        {input.r1} {input.r2}
+        {params.m_option} \\
+        -b file:{params.adapters} {params.B_option} \\
+        -o {output.r1} {params.p_option} \\
+        {input.r1} {params.r2_option}
     """
 
 
@@ -110,19 +195,22 @@ rule fastqc:
         FastQC report and zip file containing data quality information
     """
     input:
-        join(workpath,"{name}","trim","{name}.R1.trim.fastq"),
-        join(workpath,"{name}","trim","{name}.R2.trim.fastq"),
+        r1=join(workpath,"{name}","trim","{name}.R1.trim.fastq"),
     output:
         join(workpath,"{name}","QC","{name}.R1.trim_fastqc.zip"),
-        join(workpath,"{name}","QC","{name}.R2.trim_fastqc.zip"),
     params:
         rname='fqc',
         outdir=join(workpath,"{name}","QC"),
+        # Building single-end and paired-end options
+        # Input trimmed R2 FastQ file: PE='{trim.r2}', SE=''
+        r2_option = lambda w: "{0}.R2.trim.fastq".format(
+            join(workpath, w.name, "trim", w.name)
+        ) if nends[w.name] else "",
     threads: int(allocated("threads", "fastqc", cluster))
     # envmodules: config['tools']['fastqc']
     container: config['images']['metavirs']
     shell: """
-    fastqc {input} \\
+    fastqc {input.r1} {params.r2_option} \\
         -t {threads} \\
         -o {params.outdir}
     """
@@ -140,16 +228,28 @@ rule remove_host:
     """
     input:
         r1=join(workpath,"{name}","trim","{name}.R1.trim.fastq"),
-        r2=join(workpath,"{name}","trim","{name}.R2.trim.fastq"),
     output:
         sam=temp(join(workpath,"{name}","temp","{name}.host_contaminated.sam")),
         bam=temp(join(workpath,"{name}","temp","{name}.host_contaminated.bam")),
         sorted_bam=temp(join(workpath,"{name}","temp","{name}.host_contaminated.sorted.bam")),
         r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
-        r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     params:
         rname='rmhost',
-        host_index=join(config['references']['host_bowtie2_index'], 'Hosts')
+        host_index=join(config['references']['host_bowtie2_index'], 'Hosts'),
+        # Building single-end and paired-end options
+        # Input trimmed R2 FastQ file: PE='-2 {trim.r2}', SE=''
+        r2_option = lambda w: "-2 {0}.R2.trim.fastq".format(
+            join(workpath, w.name, "trim", w.name)
+        ) if nends[w.name] else "",
+        # Samtools view flag: PE='-f 12', SE='-f 4'
+        # https://broadinstitute.github.io/picard/explain-flags.html
+        f_option = lambda w: "-f 12" if nends[w.name] else "-f 4",
+        # Output host removed R2 fastq: PE='-2 output.r2', SE=''
+        r2_output = lambda w: "-2 {0}.R2.trim.host_removed.fastq.gz".format(
+            join(workpath, w.name, "trim", w.name)
+        ) if nends[w.name] else "",
+        # Bowtie2 SE vs PE conditional option: PE='-1', SE='-U'
+        bowtie2_sepe = lambda w: "-1" if nends[w.name] else "-U",
     threads: int(allocated("threads", "remove_host", cluster))
     # envmodules: config['tools']['bowtie'], config['tools']['samtools']
     container: config['images']['metavirs']
@@ -157,19 +257,17 @@ rule remove_host:
     # Align against host to remove contamination
     bowtie2 -p {threads} \\
         -x {params.host_index} \\
-        -1 {input.r1} \\
-        -2 {input.r2} \\
+        {params.bowtie2_sepe} {input.r1} {params.r2_option} \\
         -S {output.sam}
     samtools view -@ {threads} \\
-        -bS -f 12 -F 256 \\
+        -bS {params.f_option} -F 256 \\
         {output.sam} > {output.bam}
     samtools sort -n -@ {threads} \\
         {output.bam} \\
         -o {output.sorted_bam}
     samtools fastq -@ {threads} \\
         {output.sorted_bam} \\
-        -1 {output.r1} \\
-        -2 {output.r2} \\
+        -1 {output.r1} {params.r2_output} \\
         -0 /dev/null -s /dev/null -n
     """
 
@@ -187,7 +285,6 @@ rule kraken_viral:
     """
     input:
         r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
-        r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     output:
         report=join(workpath,"{name}","info","{name}.reads_kraken2_report.txt"),
         k2txt=join(workpath,"{name}","kraken2","{name}.reads.kraken2"),
@@ -197,6 +294,13 @@ rule kraken_viral:
         rname='krakenviral',
         viral_db=config['references']['kraken2_viral_db'],
         krona_ref=config['references']['kronatools'],
+        # Building single-end and paired-end options
+        # Kraken PE flag: PE='--paired', SE=''
+        paired_option = lambda w: "--paired" if nends[w.name] else "",
+        # Input host removed R2 fastq: PE='input.r2', SE=''
+        r2_option = lambda w: "{0}.R2.trim.host_removed.fastq.gz".format(
+            join(workpath, w.name, "trim", w.name)
+        ) if nends[w.name] else "",
     threads: int(allocated("threads", "kraken_viral", cluster))
     # envmodules: config['tools']['kraken'], config['tools']['kronatools']
     container: config['images']['metavirs']
@@ -204,7 +308,7 @@ rule kraken_viral:
     # Run kraken against viral database
     kraken2 --threads {threads} \\
         --db {params.viral_db} \\
-        --paired {input.r1} {input.r2} \\
+        {params.paired_option} {input.r1} {params.r2_option} \\
         --report {output.report} \\
         > {output.k2txt}
     awk -v OFS='\\t' '{{if ($1 == "C") print $2,$3}}' {output.k2txt} \\
@@ -227,7 +331,6 @@ rule metaspades:
     """
     input:
         r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
-        r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     output:
         contigs=join(workpath,"{name}","output","{name}.metaspades.contigs.fa"),
         report=join(workpath,"{name}","info","{name}.metaspades.contigs_kraken2_report.txt"),
@@ -253,6 +356,15 @@ rule metaspades:
         cat_tax=config['references']['CAT_taxonomy'],
         cat_dep=config['references']['CAT_diamond'],
         cat_dir=join(workpath,"{name}","CAT"),
+        # Building single-end and paired-end options
+        # Metaspade SE vs PE conditional option: PE='-1', SE='-s'
+        metaspades_sepe = lambda w: "-1" if nends[w.name] else "-s",
+        # Input host removed R2 fastq: PE='-2 input.r2', SE=''
+        r2_option = lambda w: "-2 {0}.R2.trim.host_removed.fastq.gz".format(
+            join(workpath, w.name, "trim", w.name)
+        ) if nends[w.name] else "",
+        # Bowtie2 SE vs PE conditional option: PE='-1', SE='-U'
+        bowtie2_sepe = lambda w: "-1" if nends[w.name] else "-U",
     threads: int(allocated("threads", "metaspades", cluster))
     # conda: config['conda']['CAT']
     # envmodules: 
@@ -269,8 +381,7 @@ rule metaspades:
     fi
     metaspades.py -t {threads} \\
         -m 240 \\
-        -1 {input.r1} \\
-        -2 {input.r2} \\
+        {params.metaspades_sepe} {input.r1} {params.r2_option} \\
         -o {wildcards.name}/metaspades
     mkdir -p {wildcards.name}/output
     mv {wildcards.name}/metaspades/contigs.fasta {output.contigs}
@@ -326,8 +437,7 @@ rule metaspades:
         {wildcards.name}/temp/{wildcards.name}_metaspades
     bowtie2 -p {threads} \\
         -x {wildcards.name}/temp/{wildcards.name}_metaspades \\
-        -1 {input.r1} \\
-        -2 {input.r2} \\
+        {params.bowtie2_sepe} {input.r1} {params.r2_option} \\
         -S {output.sam}
     
     samtools view -@ {threads} \\
@@ -352,7 +462,6 @@ rule megahit:
     """
     input:
         r1=join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"),
-        r2=join(workpath,"{name}","trim","{name}.R2.trim.host_removed.fastq.gz"),
     output:
         contigs=join(workpath,"{name}","output","{name}.megahit.contigs.fa"),
         report=join(workpath,"{name}","info","{name}.megahit.contigs_kraken2_report.txt"),
@@ -377,7 +486,16 @@ rule megahit:
         cat_db=config['references']['CAT_db'],
         cat_tax=config['references']['CAT_taxonomy'],
         cat_dep=config['references']['CAT_diamond'],
-        cat_dir=join(workpath,"{name}","CAT")
+        cat_dir=join(workpath,"{name}","CAT"),
+        # Building single-end and paired-end options
+        # Metahit SE vs PE conditional option: PE='-1', SE='-r'
+        megahit_sepe = lambda w: "-1" if nends[w.name] else "-r",
+        # Input host removed R2 fastq: PE='-2 input.r2', SE=''
+        r2_option = lambda w: "-2 {0}.R2.trim.host_removed.fastq.gz".format(
+            join(workpath, w.name, "trim", w.name)
+        ) if nends[w.name] else "",
+        # Bowtie2 SE vs PE conditional option: PE='-1', SE='-U'
+        bowtie2_sepe = lambda w: "-1" if nends[w.name] else "-U",
     threads: int(allocated("threads", "megahit", cluster))
     # conda: config['conda']['CAT']
     # envmodules: 
@@ -393,8 +511,7 @@ rule megahit:
         rm -rf "{wildcards.name}/megahit"
     fi
     megahit -t {threads} \\
-        -1 {input.r1} \\
-        -2 {input.r2} \\
+        {params.megahit_sepe} {input.r1} {params.r2_option} \\
         --out-prefix=megahit \\
         -o {wildcards.name}/megahit
     tr ' ' '_' < {wildcards.name}/megahit/megahit.contigs.fa > {output.contigs}
@@ -453,8 +570,7 @@ rule megahit:
         {wildcards.name}/temp/{wildcards.name}_megahit
     bowtie2 -p {threads} \\
         -x {wildcards.name}/temp/{wildcards.name}_megahit \\
-        -1 {input.r1} \\
-        -2 {input.r2} \\
+        {params.bowtie2_sepe} {input.r1} {params.r2_option} \\
         -S {output.sam}
     
     samtools view -@ {threads} \\
