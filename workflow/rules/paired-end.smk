@@ -250,6 +250,12 @@ rule remove_host:
         ) if nends[w.name] else "",
         # Bowtie2 SE vs PE conditional option: PE='-1', SE='-U'
         bowtie2_sepe = lambda w: "-1" if nends[w.name] else "-U",
+        # Samtools fastq output: PE='-1 {output.r1}', SE='-0 {output.r1}'
+        samtools_sepe = lambda w: "-1" if nends[w.name] else "-0",
+        # Samtools fastq, PE options: PE='-0 /dev/null -s /dev/null', SE=''
+        samtools_pe = lambda w: "-0 {0} -s {0}".format(
+            join(os.path.sep, 'dev', 'null')
+        ) if nends[w.name] else "",
     threads: int(allocated("threads", "remove_host", cluster))
     # envmodules: config['tools']['bowtie'], config['tools']['samtools']
     container: config['images']['metavirs']
@@ -267,8 +273,8 @@ rule remove_host:
         -o {output.sorted_bam}
     samtools fastq -@ {threads} \\
         {output.sorted_bam} \\
-        -1 {output.r1} {params.r2_output} \\
-        -0 /dev/null -s /dev/null -n
+        {params.samtools_sepe} {output.r1} {params.r2_output} \\
+        -n {params.samtools_pe}
     """
 
 
