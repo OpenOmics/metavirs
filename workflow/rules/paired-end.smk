@@ -46,6 +46,93 @@ def get_r2_host_removed_fastq(wildcards):
         return []
 
 
+def get_contigs_fasta(wildcards):
+    """
+    Returns a samples annotated contigs fasta file.
+    Metaspades does NOT support single-end data, so
+    metaspades will conditionally run for a given set
+    of samples. This function resolves the correct set 
+    of files for a given sample based on its paired-end
+    status.
+    """
+    # Resolves to basename of sample
+    r2 = nends[wildcards.name]
+    if r2:
+        # Runs in paired-end mode,
+        # returns metaspades and megahit
+        i = [
+            join(workpath,"{0}".format(wildcards.name),"output","{0}.metaspades.contigs.fa".format(wildcards.name)),
+            join(workpath,"{0}".format(wildcards.name),"output","{0}.megahit.contigs.fa".format(wildcards.name))
+        ]
+        return i
+    else:
+        # Runs in single-end mode,
+        # does not add metaspades to inputs list
+        i = [
+            join(workpath,"{0}".format(wildcards.name),"output","{0}.megahit.contigs.fa".format(wildcards.name))
+        ]
+        return i
+
+
+
+def get_annotated_contigs(wildcards):
+    """
+    Returns a samples annotated contigs text files.
+    Metaspades does NOT support single-end data, so
+    metaspades will conditionally run for a given set
+    of samples. This function resolves the correct set 
+    of files for a given sample based on its paired-end
+    status.
+    """
+    # Resolves to basename of sample
+    r2 = nends[wildcards.name]
+    if r2:
+        # Runs in paired-end mode,
+        # returns all assembler/annotator outputs
+        i = [
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.metaspades_CAT.txt".format(wildcards.name)),
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.metaspades_kraken2.txt".format(wildcards.name)),
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_CAT.txt".format(wildcards.name)),
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_kraken2.txt".format(wildcards.name))
+        ]
+        return i
+    else:
+        # Runs in single-end mode,
+        # does not add metaspades to inputs list
+        wildcards.name
+        i = [
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_CAT.txt".format(wildcards.name)),
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_kraken2.txt".format(wildcards.name))
+        ]
+        return i
+
+
+def get_aggregated_results(wildcards):
+    """
+    Returns all samples aggregated results.
+    Metaspades does NOT support single-end data, so
+    metaspades will conditionally run for a given set
+    of samples. This function resolves the correct set 
+    of files for a given sample based on its paired-end
+    status.
+    """
+    if pe_samples:
+        # Return metaspades and megahit results
+        return [
+            join(workpath,"Project","temp","metaspades_kraken2.krona"),
+            join(workpath,"Project","temp","metaspades_CAT.krona"),
+            join(workpath,"Project","temp","megahit_kraken2.krona"),
+            join(workpath,"Project","temp","megahit_CAT.krona")
+        ]
+    else:
+        # All samples are single-end,
+        # return only megahit results 
+        return [
+            join(workpath,"Project","temp","megahit_kraken2.krona"),
+            join(workpath,"Project","temp","megahit_CAT.krona")
+        ]
+
+
 # Pre alignment QC-related rules
 rule validator_r1:
     """
@@ -602,10 +689,7 @@ rule krona:
         Interactive Krona report for a sample. 
     """
     input:
-        f1=join(workpath,"{name}","temp","{name}.metaspades_CAT.txt"),
-        f2=join(workpath,"{name}","temp","{name}.metaspades_kraken2.txt"),
-        f3=join(workpath,"{name}","temp","{name}.megahit_CAT.txt"),
-        f4=join(workpath,"{name}","temp","{name}.megahit_kraken2.txt"),
+        get_annotated_contigs
     output:
         report=join(workpath,"{name}","output","{name}.contig.classification.html"),
     params:
@@ -619,10 +703,7 @@ rule krona:
         -tax {params.krona_ref} \\
         -m 3 \\
         -o {output.report} \\
-        {input.f1} \\
-        {input.f2} \\
-        {input.f3} \\
-        {input.f4}
+        {input}
     """
 
 
@@ -681,8 +762,7 @@ rule metaquast:
         Quality-control report of the assembly.
     """
     input:
-        metaspades=join(workpath,"{name}","output","{name}.metaspades.contigs.fa"),
-        megahit=join(workpath,"{name}","output","{name}.megahit.contigs.fa"),
+        contigs=get_contigs_fasta,
         dep=join(workpath,"{name}","temp","{name}.metaquast.fa"),
     output:
         report=join(workpath,"{name}","output","{name}_metaquast","report.html")
@@ -694,8 +774,7 @@ rule metaquast:
     container: config['images']['metavirs']
     shell: """
     metaquast.py \\
-        {input.metaspades} \\
-        {input.megahit} \\
+        {input.contigs} \\
         -r {params.ref} \\
         --fragmented \\
         --gene-finding \\
@@ -705,29 +784,28 @@ rule metaquast:
     """
 
 
-rule prep_aggregate:
+rule prep_aggregate_metaspades_scatter:
     """
     Data-processing step to prep input for the aggregated Krona report. Sample
-    names are added to text files prior to project-level aggregation.
+    names are added to text files prior to project-level aggregation. This rule
+    is split from prep_aggregate_megahit due to the conditional manner in which 
+    metaspades runs for a given sample (does not support single-end data). This
+    rule will only run if a sample is paired-end.
     @Input:
-        Annotated contigs from metaspades and megahit (gather per-sample)
+        Annotated contigs from metaspades (gather per-sample)
     @Output:
         Annotated contigs with sample names
     """
     input:
         f1=join(workpath,"{name}","temp","{name}.metaspades_kraken2.txt"),
-        f2=join(workpath,"{name}","temp","{name}.megahit_kraken2.txt"),
-        f3=join(workpath,"{name}","temp","{name}.metaspades_CAT.txt"),
-        f4=join(workpath,"{name}","temp","{name}.megahit_CAT.txt"),
+        f2=join(workpath,"{name}","temp","{name}.metaspades_CAT.txt"),
     output:
         f1=join(workpath,"Project","temp","{name}.metaspades.contigs.kraken2.krona.meta"),
-        f2=join(workpath,"Project","temp","{name}.megahit.contigs.kraken2.krona.meta"),
-        f3=join(workpath,"Project","temp","{name}.metaspades.contigs.CAT.krona.meta"),
-        f4=join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"),
+        f2=join(workpath,"Project","temp","{name}.metaspades.contigs.CAT.krona.meta"),
     params:
         rname='prepagg',
         sample='{name}',
-    threads: int(allocated("threads", "prep_aggregate", cluster))
+    threads: int(allocated("threads", "prep_aggregate_metaspades_scatter", cluster))
     container: config['images']['metavirs']
     shell: """
     awk -v var="{params.sample}" \\
@@ -738,14 +816,113 @@ rule prep_aggregate:
         '{{print var"_"$0}}' \\
         {input.f2} \\
     > {output.f2}
+    """
+
+
+rule prep_aggregate_megahit_scatter:
+    """
+    Data-processing step to prep input for the aggregated Krona report. Sample
+    names are added to text files prior to project-level aggregation. This rule
+    is split from prep_aggregate_metaspades due to the conditional manner in which 
+    megaspades runs for a given sample (does not support single-end data). This
+    rule will always run (megahit supports PE and SE data).
+    @Input:
+        Annotated contigs from megahit (gather per-sample)
+    @Output:
+        Annotated contigs with sample names
+    """
+    input:
+        f1=join(workpath,"{name}","temp","{name}.megahit_kraken2.txt"),
+        f2=join(workpath,"{name}","temp","{name}.megahit_CAT.txt"),
+    output:
+        f1=join(workpath,"Project","temp","{name}.megahit.contigs.kraken2.krona.meta"),
+        f2=join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"),
+    params:
+        rname='prepagg',
+        sample='{name}',
+    threads: int(allocated("threads", "prep_aggregate_megahit_scatter", cluster))
+    container: config['images']['metavirs']
+    shell: """
+    # Create aggregated contig annotations
     awk -v var="{params.sample}" \\
         '{{print var"_"$0}}' \\
-        {input.f3} \\
-    > {output.f3}
+        {input.f1} \\
+    > {output.f1}
     awk -v var="{params.sample}" \\
         '{{print var"_"$0}}' \\
-        {input.f4} \\
-    > {output.f4}
+        {input.f2} \\
+    > {output.f2}
+    """
+
+rule prep_aggregate_metaspades_gather:
+    """
+    Data-processing step to prep input for the aggregated Krona report.
+    All metaspades results are aggregated across all samples. This rule
+    is split from pre_aggregate_megahit due to the conditional manner in 
+    which metaspades runs for a given sample (does not support single-end 
+    data). This rule will only run if a sample is paired-end.
+    @Input:
+        Annotated contigs from metaspades (gather all-samples)
+    @Output:
+        Annotated contigs with sample names
+    """
+    input:
+        f1=expand(join(workpath,"Project","temp","{name}.metaspades.contigs.kraken2.krona.meta"), name=pe_samples), 
+        f2=expand(join(workpath,"Project","temp","{name}.metaspades.contigs.CAT.krona.meta"), name=pe_samples),
+    output:
+        f1=join(workpath,"Project","temp","metaspades_kraken2.krona"),
+        f2=join(workpath,"Project","temp","metaspades_CAT.krona"),
+    params:
+        rname='prepagg',
+        search=join(workpath,"Project","temp"),
+    threads: int(allocated("threads", "prep_aggregate_metaspades_gather", cluster))
+    container: config['images']['metavirs']
+    shell: """
+    # Create aggregated contig annotations
+    find {params.search} \\
+        -name '*.metaspades.contigs.kraken2.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f1}
+    find {params.search} \\
+        -name '*.metaspades.contigs.CAT.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f2}
+    """
+
+
+rule prep_aggregate_megahit_gather:
+    """
+    Data-processing step to prep input for the aggregated Krona report.
+    All megahit results are aggregated across all samples. This rule
+    is split from pre_aggregate_metaspades due to the conditional manner 
+    in which megahit runs for a given sample (does not support single-end 
+    data). This rule will only run if a sample is paired-end.
+    @Input:
+        Annotated contigs from megahit (gather all-samples)
+    @Output:
+        Annotated contigs with sample names
+    """
+    input:
+        f1=expand(join(workpath,"Project","temp","{name}.megahit.contigs.kraken2.krona.meta"), name=samples), 
+        f2=expand(join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"), name=samples),
+    output:
+        f1=join(workpath,"Project","temp","megahit_kraken2.krona"),
+        f2=join(workpath,"Project","temp","megahit_CAT.krona"),
+    params:
+        rname='prepagg',
+        search=join(workpath,"Project","temp"),
+    threads: int(allocated("threads", "prep_aggregate_megahit_gather", cluster))
+    container: config['images']['metavirs']
+    shell: """
+    # Create aggregated contig annotations
+    find {params.search} \\
+        -name '*.megahit.contigs.kraken2.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f1}
+    find {params.search} \\
+        -name '*.megahit.contigs.CAT.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f2}
     """
 
 
@@ -759,15 +936,8 @@ rule aggregate:
         Multi-sample aggregated Krona report
     """
     input:
-        f1=expand(join(workpath,"Project","temp","{name}.metaspades.contigs.kraken2.krona.meta"), name=samples), 
-        f2=expand(join(workpath,"Project","temp","{name}.megahit.contigs.kraken2.krona.meta"), name=samples),
-        f3=expand(join(workpath,"Project","temp","{name}.metaspades.contigs.CAT.krona.meta"), name=samples),
-        f4=expand(join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"), name=samples),
+        get_aggregated_results,
     output:
-        f1=join(workpath,"Project","temp","metaspades_kraken2.krona"),
-        f2=join(workpath,"Project","temp","megahit_kraken2.krona"),
-        f3=join(workpath,"Project","temp","metaspades_CAT.krona"),
-        f4=join(workpath,"Project","temp","megahit_CAT.krona"),
         krona=join(workpath,"Project","Project.contig.classification.html"),
     params:
         search=join(workpath,"Project","temp"),
@@ -776,30 +946,10 @@ rule aggregate:
     threads: int(allocated("threads", "aggregate", cluster))
     container: config['images']['metavirs']
     shell: """
-    # Create aggregated contig annotations
-    find {params.search} \\
-        -name '*.metaspades.contigs.kraken2.krona.meta' \\
-        -exec cat {{}} \\; \\
-    > {output.f1}
-    find {params.search} \\
-        -name '*.megahit.contigs.kraken2.krona.meta' \\
-        -exec cat {{}} \\; \\
-    > {output.f2}
-    find {params.search} \\
-        -name '*.metaspades.contigs.CAT.krona.meta' \\
-        -exec cat {{}} \\; \\
-    > {output.f3}
-    find {params.search} \\
-        -name '*.megahit.contigs.CAT.krona.meta' \\
-        -exec cat {{}} \\; \\
-    > {output.f4}
     # Generate multi-sample report
     ktImportTaxonomy \\
         -tax {params.krona_ref} \\
         -m 3 \\
         -o {output.krona} \\
-        {output.f1} \\
-        {output.f2} \\
-        {output.f3} \\
-        {output.f4}
+        {input}
     """

@@ -93,11 +93,14 @@ rule all:
             join(workpath,"{name}","kraken2","{name}.reads.krona.html"), 
             name=samples
         ),
-        # Metaspades, viral assembly, annotation, and alignment to contigs
+        # Metaspades, viral assembly, annotation, and alignment to contigs,
+        # conditional runs with pair-end samples,
+        # metaspades does NOT support single-end,
+        # https://github.com/ablab/spades/discussions/1026
         # @imported from rules/paired-end.smk
         expand(
             join(workpath,"{name}","output","{name}.metaspades.bam"), 
-            name=samples
+            name=pe_samples
         ),
         # Megahit, viral assembly, annotation, and alignment to contigs
         # @imported from rules/paired-end.smk
