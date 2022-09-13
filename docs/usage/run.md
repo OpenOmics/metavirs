@@ -9,12 +9,11 @@ Setting up the metavirs pipeline is fast and easy! In its most basic form, <code
 
 ## 2. Synopsis
 ```text
-$ metavirs run [--help] [--mode <slurm,local>] \
-     [--job-name JOB_NAME] [--dry-run] [--silent] \
+$ metavirs run [--help] [--aggregate] \
+     [--mode <slurm,local>] [--job-name JOB_NAME] \
+     [--dry-run] [--silent] [--sif-cache SIF_CACHE] \
      [--singularity-cache SINGULARITY_CACHE] \
-     [--sif-cache SIF_CACHE] \
-     [--tmpdir TMP_DIR] \
-     [--threads THREADS] \
+     [--tmpdir TMP_DIR] [--threads THREADS] \
       --input INPUT [INPUT ...] \
       --output OUTPUT
 ```
@@ -33,7 +32,7 @@ Each of the following arguments are required. Failure to provide a required argu
 > **Input FastQ or BAM file(s).**  
 > *type: file(s)*  
 > 
-> One or more FastQ files can be provided. The pipeline does NOT support single-end data. From the command-line, each input file should seperated by a space. Globbing is supported! This makes selecting FastQ files easy. Input FastQ files should always be gzipp-ed.
+> One or more FastQ files can be provided. The pipeline supports single-end and paired-end data. Single-end and paired-end FastQ files can be provided to this option simultaneously. Under the hood, the pipeline will run the correct set of rules and options for a given sample. When providing each input file, please seperate each file with a space. Globbing is supported! This makes selecting FastQ files easy. Note: Input FastQ files must be gzipp-ed.
 > 
 > ***Example:*** `--input .tests/*.R?.fastq.gz`
 
@@ -46,19 +45,22 @@ Each of the following arguments are required. Failure to provide a required argu
 > 
 > ***Example:*** `--output /data/$USER/metavirs_out`
 
-### 2.2 Options
+### 2.2 Analysis options
 
 Each of the following arguments are optional, and do not need to be provided. 
 
-  `-h, --help`            
-> **Display Help.**  
+  `--aggregate`            
+> **Aggregate results into one report.**  
 > *type: boolean flag*
 > 
-> Shows command's synopsis, help message, and an example command
-> 
-> ***Example:*** `--help`
+> Aggregates contig annotation results into one mutli-sample, project-level interactive Krona report. By default, any resulting reports will be created at a per-sample level.
+>
+> ***Example:*** `--aggregate`
 
----  
+### 2.3 Orchestration options
+
+Each of the following arguments are optional, and do not need to be provided. 
+
   `--dry-run`            
 > **Dry run the pipeline.**  
 > *type: boolean flag*
@@ -131,25 +133,80 @@ Each of the following arguments are optional, and do not need to be provided.
 > 
 > ***Example:*** `--threads 12`
 
-## 3. Example
-```bash 
-# Step 1.) Grab an interactive node
-# Do not run on head node!
-sinteractive --mem=8g --cpus-per-task=4
-module purge
-/data/CCBR_Pipeliner/db/PipeDB/Conda/bin/conda activate base
-module load singularity snakemake
+## 2.4 Miscellaneous options  
+Each of the following arguments are optional, and do not need to be provided. 
 
-# Step 2A.) Dry-run the pipeline
+  `-h, --help`            
+> **Display Help.**  
+> *type: boolean flag*
+> 
+> Shows command's synopsis, help message, and an example command
+> 
+> ***Example:*** `--help`
+
+## 3. Examples
+
+### 3.1 Biowulf
+```bash 
+# Step 0.) Grab an interactive node,
+# do not run on head node if you are
+# on a cluster, like Biowulf/BigSky!
+srun -N 1 -n 1 --time=1:00:00 --mem=8gb --cpus-per-task=2 --pty bash
+# Add any missing dependencies to $PATH
+module purge
+module load singularity
+module load snakemake
+
+# Step 1A.) Dry-run the pipeline,
+# this will display what steps will 
+# be run or what steps still remain.
 ./metavirs run --input .tests/*.gz \
     --output /data/$USER/metavirs_out \
     --mode slurm \
+    --aggregate \
     --dry-run
 
-# Step 2B.) Run the viral metagenomics pipeline
-# The slurm mode will submit jobs to the cluster.
-# It is recommended running metavirs in this mode.
+# Step 1B.) Run the viral metagenomics
+# pipeline. The slurm mode will submit 
+# jobs to the cluster. We recommended 
+# running metavirs in this mode, if
+# you have access to a cluster like
+# Biowulf or BigSky.
 ./metavirs run --input .tests/*.gz \
     --output /data/$USER/metavirs_out \
-    --mode slurm 
+    --mode slurm \
+    --aggregate
+```
+
+### 3.2 BigSky
+```bash
+# Step 0.) Grab an interactive node,
+# do not run on head node if you are
+# on a cluster, like Biowulf/BigSky!
+srun -N 1 -n 1 --time=1:00:00 --mem=8gb --cpus-per-task=2 --pty bash
+# Add any missing dependencies to $PATH
+source /gs1/apps/user/rmlspack/share/spack/setup-env.sh
+export PS1="${PS1:-}"
+spack load miniconda3@4.8.2
+source activate snakemake
+
+# Step 1A.) Dry-run the pipeline,
+# this will display what steps will 
+# be run or what steps still remain.
+./metavirs run --input .tests/*.gz \
+    --output /gs1/RTS/NextGen/$USER/metavirs_out \
+    --mode slurm \
+    --aggregate \
+    --dry-run
+
+# Step 1B.) Run the viral metagenomics
+# pipeline. The slurm mode will submit 
+# jobs to the cluster. We recommended 
+# running metavirs in this mode, if
+# you have access to a cluster like
+# Biowulf or BigSky.
+./metavirs run --input .tests/*.gz \
+    --output /gs1/RTS/NextGen/$USER/metavirs_out \
+    --mode slurm \
+    --aggregate
 ```

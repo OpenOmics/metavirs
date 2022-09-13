@@ -1,10 +1,30 @@
-# metavirs 🔬  [![docs](https://github.com/OpenOmics/metavirs/workflows/docs/badge.svg)](https://github.com/OpenOmics/metavirs/actions) [![GitHub issues](https://img.shields.io/github/issues/OpenOmics/metavirs?color=brightgreen)](https://github.com/OpenOmics/metavirs/issues)  [![GitHub license](https://img.shields.io/github/license/OpenOmics/metavirs)](https://github.com/OpenOmics/metavirs/blob/main/LICENSE) 
+<div align="center">
 
-> **_Metagenomics Viral Sequencing Pipeline_**. This is the home of the pipeline, metavirs. Its long-term goals: to assemble, annotate, and classify enviromental samples like no pipeline before!
+  <h1 style="font-size: 250%">metavirs 🔬</h1>
 
----
+  <b><i>Viral Metagenomics Pipeline</i></b><br> 
+  <a href="https://github.com/OpenOmics/metavirs/actions/workflows/main.yaml">
+    <img alt="tests" src="https://github.com/OpenOmics/metavirs/workflows/tests/badge.svg">
+  </a>
+  <a href="https://github.com/OpenOmics/metavirs/actions/workflows/docs.yml">
+    <img alt="docs" src="https://github.com/OpenOmics/metavirs/workflows/docs/badge.svg">
+  </a>
+  <a href="https://github.com/OpenOmics/metavirs/issues">
+    <img alt="GitHub issues" src="https://img.shields.io/github/issues/OpenOmics/metavirs?color=brightgreen">
+  </a>
+  <a href="https://github.com/OpenOmics/metavirs/blob/main/LICENSE">
+    <img alt="GitHub license" src="https://img.shields.io/github/license/OpenOmics/metavirs">
+  </a>
+
+  <p>
+    This is the home of the pipeline, metavirs. Its long-term goals: to assemble, annotate, and classify enviromental samples like no pipeline before!
+  </p>
+
+</div>  
+
+
 ## Overview
-Welcome to metavirs' documentation! This guide is the main source of documentation for users that are getting started with the [Viral metagenomics pipeline](https://github.com/OpenOmics/metavirs/). 
+Welcome to our documentation! This guide is the main source of documentation for users that are getting started with the [viral metagenomics pipeline](https://github.com/OpenOmics/metavirs/). 
 
 The **`./metavirs`** pipeline is composed several inter-related sub commands to setup and run the pipeline across different systems. Each of the available sub commands perform different functions: 
 
@@ -12,9 +32,9 @@ The **`./metavirs`** pipeline is composed several inter-related sub commands to 
  * [<code>metavirs <b>unlock</b></code>](usage/unlock.md): Unlocks a previous runs output directory.
  * [<code>metavirs <b>cache</b></code>](usage/cache.md): Cache remote resources locally, coming soon!
 
-metavirs is a comprehensive viral metagenomics pipeline assemble, annotate, and classify enviromental samples. It relies on technologies like [Singularity<sup>1</sup>](https://singularity.lbl.gov/) to maintain the highest-level of reproducibility. The pipeline consists of a series of data processing and quality-control steps orchestrated by [Snakemake<sup>2</sup>](https://snakemake.readthedocs.io/en/stable/), a flexible and scalable workflow management system, to submit jobs to a cluster.
+metavirs is a comprehensive viral metagenomics pipeline to assemble, annotate, and classify microorganisms in enviromental samples. It relies on technologies like [Singularity<sup>1</sup>](https://singularity.lbl.gov/) to maintain the highest-level of reproducibility. The pipeline consists of a series of data processing and quality-control steps orchestrated by [Snakemake<sup>2</sup>](https://snakemake.readthedocs.io/en/stable/), a flexible and scalable workflow management system, to submit jobs to a cluster.
 
-The pipeline is compatible with data generated from Illumina short-read sequencing technologies. As input, it accepts a set of FastQ files and can be run locally on a compute instance, on-premise using a cluster, or on the cloud (feature coming soon!). A user can define the method or mode of execution. The pipeline can submit jobs to a cluster using a job scheduler like SLURM, or run on AWS using Tibanna (feature coming soon!). A hybrid approach ensures the pipeline is accessible to all users.
+The pipeline is compatible with data generated from Illumina short-read sequencing technologies. As input, it accepts a set of FastQ files and can be run locally on a compute instance or on-premise using a cluster. A user can define the method or mode of execution. The pipeline can submit jobs to a cluster using a job scheduler like SLURM (more coming soon!). A hybrid approach ensures the pipeline is accessible to all users.
 
 Before getting started, we highly recommend reading through the [usage](usage/run.md) section of each available sub command.
 
@@ -22,7 +42,7 @@ For more information about issues or trouble-shooting a problem, please checkout
 
 ## Contribute 
 
-This site is a living document, created for and by members like you. metavirs is maintained by the members of NCBR and is improved by continous feedback! We encourage you to contribute new content and make improvements to existing content via pull request to our [GitHub repository :octicons-heart-fill-24:{ .heart }](https://github.com/OpenOmics/metavirs).
+This site is a living document, created for and by members like you. metavirs is maintained by the members of OpenOmics and is improved by continous feedback! We encourage you to contribute new content and make improvements to existing content via pull request to our [GitHub repository :octicons-heart-fill-24:{ .heart }](https://github.com/OpenOmics/metavirs).
 
 
 ## References
