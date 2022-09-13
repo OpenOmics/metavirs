@@ -3,12 +3,18 @@
   <h1 style="font-size: 250%">metavirs 🔬</h1>
 
   <b><i>Viral Metagenomics Pipeline</i></b><br> 
+  <a href="https://github.com/OpenOmics/metavirs/releases">
+    <img alt="GitHub release" src="https://img.shields.io/github/v/release/OpenOmics/metavirs?color=blue&include_prereleases">
+  </a>
+  <a href="https://hub.docker.com/repository/docker/skchronicles/metavirs">
+    <img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/skchronicles/metavirs">
+  </a>
   <a href="https://github.com/OpenOmics/metavirs/actions/workflows/main.yaml">
     <img alt="tests" src="https://github.com/OpenOmics/metavirs/workflows/tests/badge.svg">
   </a>
   <a href="https://github.com/OpenOmics/metavirs/actions/workflows/docs.yml">
     <img alt="docs" src="https://github.com/OpenOmics/metavirs/workflows/docs/badge.svg">
-  </a>
+  </a><br>
   <a href="https://github.com/OpenOmics/metavirs/issues">
     <img alt="GitHub issues" src="https://img.shields.io/github/issues/OpenOmics/metavirs?color=brightgreen">
   </a>
