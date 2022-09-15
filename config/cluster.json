@@ -37,7 +37,7 @@
         "time": "0-18:00:00"
     },
     "metaspades": {
-        "threads": "32",
+        "threads": "16",
         "mem": "64g",
         "time": "0-18:00:00"
     },

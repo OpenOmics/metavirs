@@ -449,6 +449,7 @@ rule metaspades:
         cat_tax=config['references']['CAT_taxonomy'],
         cat_dep=config['references']['CAT_diamond'],
         cat_dir=join(workpath,"{name}","CAT"),
+        memory=allocated("mem", "metaspades", cluster).lower().rstrip('g'),
         # Building single-end and paired-end options
         # Metaspade SE vs PE conditional option: PE='-1', SE='-s'
         metaspades_sepe = lambda w: "-1" if nends[w.name] else "-s",
@@ -473,7 +474,7 @@ rule metaspades:
         rm -rf "{wildcards.name}/metaspades"
     fi
     metaspades.py -t {threads} \\
-        -m 240 \\
+        -m {params.memory} \\
         {params.metaspades_sepe} {input.r1} {params.r2_option} \\
         -o {wildcards.name}/metaspades
     mkdir -p {wildcards.name}/output
