@@ -1,12 +1,12 @@
 {
     "references": {
         "adapters": "resources/TruSeq_and_nextera_adapters.fa",
-        "host_bowtie2_index": "/data/NCBR/references/metavirs/bowtie2/",
-        "kraken2_viral_db": "/data/NCBR/references/metavirs/kraken2/viral/",
-        "kronatools": "/data/NCBR/references/metavirs/kronatax_0921/",
-        "CAT_db": "/data/NCBR/references/metavirs/CAT_prepare_20210107/2021-01-07_CAT_database",
-        "CAT_taxonomy": "/data/NCBR/references/metavirs/CAT_prepare_20210107/2021-01-07_taxonomy",
-        "CAT_diamond": "/data/NCBR/references/metavirs/CAT_prepare_20210107/Diamond_2.0.6/diamond",
-        "ncbi_viral_fasta": "/data/NCBR/references/metavirs/ncbi/viral_oneline.fa"
+        "host_bowtie2_index": "/data/OpenOmics/references/metavirs/bowtie2/",
+        "kraken2_viral_db": "/data/OpenOmics/references/metavirs/kraken2/viral/",
+        "kronatools": "/data/OpenOmics/references/metavirs/kronatax_0921/",
+        "CAT_db": "/data/OpenOmics/references/metavirs/CAT_prepare_20210107/2021-01-07_CAT_database",
+        "CAT_taxonomy": "/data/OpenOmics/references/metavirs/CAT_prepare_20210107/2021-01-07_taxonomy",
+        "CAT_diamond": "/data/OpenOmics/references/metavirs/CAT_prepare_20210107/Diamond_2.0.6/diamond",
+        "ncbi_viral_fasta": "/data/OpenOmics/references/metavirs/ncbi/viral_oneline.fa"
     }
 }

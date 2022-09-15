@@ -715,7 +715,7 @@ def runner(mode, outdir, alt_cache, logger, additional_bind_paths = None,
         # Look into later: it maybe worth 
         # replacing Popen subprocess with a direct
         # snakemake API call: https://snakemake.readthedocs.io/en/stable/api_reference/snakemake.html
-        # CLUSTER_OPTS="'sbatch --gres {cluster.gres} --cpus-per-task {cluster.threads} -p {cluster.partition} \
+        # CLUSTER_OPTS="'sbatch --gres {cluster.gres} --cpus-per-task {cluster.threads} \
         #   -t {cluster.time} --mem {cluster.mem} --job-name={params.rname} -e $SLURMDIR/slurm-%j_{params.rname}.out \
         #   -o $SLURMDIR/slurm-%j_{params.rname}.out'"
         # sbatch --parsable -J "$2" --gres=lscratch:500 --time=5-00:00:00 --mail-type=BEGIN,END,FAIL \
