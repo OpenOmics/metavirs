@@ -3,7 +3,7 @@
 
 # Python standard library
 from __future__ import print_function
-from shutil import copytree
+from shutil import copytree, copyfileobj
 import os, sys, hashlib
 import subprocess, json
 
@@ -291,6 +291,26 @@ def unpacked(nested_dict):
             # If value is not dict type then
             # yield the value
             yield value
+
+
+def cat(files, output_file):
+    """Concatenates mutiple files into one file. It operates similar 
+    to the cat unix command.
+    @param files list[<str>]:
+        List of files to concatenate together
+    @param output_file <str>:
+        Name of concatenated output file
+    @return output_file <str>
+    """
+    # shutil.copyfileobj() automatically reads input
+    # files chunk by chunk, which is much more memory
+    # efficent when working with very large files
+    with open(output_file,'wb') as ofh:
+        for f in files:
+            with open(f,'rb') as ifh:
+                copyfileobj(ifh, ofh)
+    return output_file
+
 
 class Colors():
     """Class encoding for ANSI escape sequeces for styling terminal text.
