@@ -96,6 +96,7 @@ def download(session, url, output_file=None, md5_checksum=None):
 
     # Check downloaded MD5 against 
     # expected MD5 checksum value  
+    local_checksum = ''
     if md5_checksum:
         local_checksum = md5sum(local_filename)
         if local_checksum != md5_checksum:
