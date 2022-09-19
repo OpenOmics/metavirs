@@ -258,7 +258,7 @@ def main(options):
         print('Listing files to download...')
         for f in output_files:
             print("  •", f)
-        sys.exit(0)
+        return
 
     # Number of threads to use
     # for concurrent downloads
