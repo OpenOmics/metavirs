@@ -189,6 +189,8 @@ def setup(sub_args, ifiles, repo_path, output_path):
         "genome": genome_config,
         # Template for tool information
         "tools": os.path.join(repo_path,'config', 'modules.json'),
+        # Resource bundle installation
+        "install": os.path.join(repo_path,'config', 'install.json'),
     }
 
     # Create the global or master config 
