@@ -257,9 +257,60 @@ def cache(sub_args):
         Parsed arguments for unlock sub-command
     """
     print(sub_args)
-    fatal('NotImplementedError... Comming Soon!')
+    # Check for dependencies
+    require(['singularity'], ['singularity'])
+    sif_cache = sub_args.sif_cache
+    # Get absolute PATH to templates in exome-seek git repo
+    repo_path = os.path.dirname(os.path.abspath(__file__))
+    images = os.path.join(repo_path, 'config','containers.json')
 
- 
+    # Create image cache
+    if not exists(sif_cache):
+        # Pipeline output directory does not exist on filesystem
+        os.makedirs(sif_cache)
+    elif exists(sif_cache) and os.path.isfile(sif_cache):
+        # Provided Path for pipeline output directory exists as file
+        raise OSError("""\n\tFatal: Failed to create provided sif cache directory!
+        User provided --sif-cache PATH already exists on the filesystem as a file.
+        Please {} cache again with a different --sif-cache PATH.
+        """.format(_name)
+        )
+
+    # Check if local SIFs already exist on the filesystem
+    with open(images, 'r') as fh:
+        data = json.load(fh)
+
+    pull = []
+    for image, uri in data['images'].items():
+        sif = os.path.join(sif_cache, '{}.sif'.format(os.path.basename(uri).replace(':', '_')))
+        if not exists(sif):
+            # If local sif does not exist on in cache, print warning
+            # and default to pulling from URI in config/containers.json
+            print('Image will be pulled from "{}".'.format(uri), file=sys.stderr)
+            pull.append(uri)
+
+    if not pull:
+        # Nothing to do!
+        print('Singularity image cache is already up to update!')
+    else:
+        # There are image(s) that need to be pulled 
+        if not sub_args.dry_run:
+            # container cache script: src/cache.sh
+            # Quote user provided values to avoid shell injections
+            username = os.environ.get('USER', os.environ.get('USERNAME'))
+            exitcode = bash(
+                str(os.path.join(repo_path, 'src', 'cache.sh')) + 
+                ' local ' +
+                " -s '{}' ".format(sif_cache) +
+                " -i '{}' ".format(','.join(pull)) + 
+                " -t '{0}/{1}/.singularity/' ".format(sif_cache, username)
+            )
+            # Check exitcode of caching script 
+            if exitcode != 0:
+                fatal('Fatal: Failed to pull all containers. Please try again!')
+            print('Done: sucessfully pulled all software containers!')
+
+
 def parsed_arguments(name, description):
     """Parses user-provided command-line arguments. Requires argparse and textwrap
     package. argparse was added to standard lib in python 3.5 and textwrap was added

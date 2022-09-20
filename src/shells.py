@@ -52,13 +52,16 @@ def bash(cmd, interpreter='/bin/bash', strict=set_options(True), cwd=os.getcwd()
         exitcode = subprocess.check_call(strict + cmd, 
             shell=True, 
             executable=interpreter, 
-            cwd=cwd, 
+            cwd=cwd,
             **kwargs
         )
-    except CalledProcessError as e:
+    except Exception as e:
         exitcode = e.returncode
-        err("""WARNING: Failed to run '{}' command!
-        └── Command returned a non-zero exitcode of '{}'.""".format(strict + cmd, exitcode)
+        err(
+            """WARNING: Failed to run '{}' command!
+            └── Command returned a non-zero exitcode of '{}'
+            └── Error: {}
+            """.format(strict + cmd, exitcode, e)
         )
 
     return exitcode
