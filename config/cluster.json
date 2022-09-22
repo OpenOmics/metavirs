@@ -38,12 +38,12 @@
     "metaspades": {
         "threads": "16",
         "mem": "64g",
-        "time": "0-18:00:00"
+        "time": "2-18:00:00"
     },
     "megahit": {
         "threads": "32",
         "mem": "64g",
-        "time": "0-18:00:00"
+        "time": "2-00:00:00"
     },
     "krona": {
         "threads": "2",
