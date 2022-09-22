@@ -14,6 +14,7 @@ $ metavirs run [--help] [--aggregate] \
      [--dry-run] [--silent] [--sif-cache SIF_CACHE] \
      [--singularity-cache SINGULARITY_CACHE] \
      [--tmpdir TMP_DIR] [--threads THREADS] \
+     [--resource-bundle RESOURCE_BUNDLE] \
       --input INPUT [INPUT ...] \
       --output OUTPUT
 ```
@@ -122,6 +123,15 @@ Each of the following arguments are optional, and do not need to be provided.
 > Uses a local cache of SIFs on the filesystem. This SIF cache can be shared across users if permissions are set correctly. If a SIF does not exist in the SIF cache, the image will be pulled from Dockerhub and a warning message will be displayed. The `metavirs cache` subcommand can be used to create a local SIF cache. Please see `metavirs cache` for more information. This command is extremely useful for avoiding DockerHub pull rate limits. It also remove any potential errors that could occur due to network issues or DockerHub being temporarily unavailable. We recommend running metavirs with this option when ever possible.
 > 
 > ***Example:*** `--singularity-cache /data/$USER/SIFs`
+
+---  
+  `--resource-bundle RESOURCE_BUNDLE`
+> **Path to a resource bundle downloaded with the install sub command.**  
+> *type: path*  
+>
+> The resource bundle contains the set of required reference files for processing any data. The path provided to this option will be the path to the metavirs directory that was created when running the install sub command. Please see the install sub command for more information about downloading the pipeline's resource bundle.
+> 
+> ***Example:*** `--resource-bundle /data/$USER/refs/metavirs`
 
 ---  
   `--threads THREADS`   

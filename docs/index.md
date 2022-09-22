@@ -36,7 +36,8 @@ The **`./metavirs`** pipeline is composed several inter-related sub commands to 
 
  * [<code>metavirs <b>run</b></code>](usage/run.md): Run the metavirs pipeline with your input files.
  * [<code>metavirs <b>unlock</b></code>](usage/unlock.md): Unlocks a previous runs output directory.
- * [<code>metavirs <b>cache</b></code>](usage/cache.md): Cache remote resources locally, coming soon!
+ * [<code>metavirs <b>install</b></code>](usage/install.md): Download reference files locally.
+ * [<code>metavirs <b>cache</b></code>](usage/cache.md): Cache software containers locally.
 
 metavirs is a comprehensive viral metagenomics pipeline to assemble, annotate, and classify microorganisms in enviromental samples. It relies on technologies like [Singularity<sup>1</sup>](https://singularity.lbl.gov/) to maintain the highest-level of reproducibility. The pipeline consists of a series of data processing and quality-control steps orchestrated by [Snakemake<sup>2</sup>](https://snakemake.readthedocs.io/en/stable/), a flexible and scalable workflow management system, to submit jobs to a cluster.
 

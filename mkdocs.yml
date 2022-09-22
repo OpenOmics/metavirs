@@ -49,7 +49,7 @@ plugins:
 extra:
   social:
     - icon: fontawesome/solid/users
-      link: https://ncbr.ncifcrf.gov/
+      link: https://idss-bioinformatics.nih.gov/
     - icon: fontawesome/brands/github
       link: https://github.com/OpenOmics
     - icon: fontawesome/brands/docker
@@ -100,6 +100,7 @@ nav:
   - Commands: 
     - metavirs run: usage/run.md
     - metavirs unlock: usage/unlock.md
+    - metavirs install: usage/install.md
     - metavirs cache: usage/cache.md
   - FAQ:
     - General Questions: faq/questions.md
