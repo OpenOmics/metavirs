@@ -5,14 +5,17 @@
 from __future__ import print_function
 from shutil import copytree
 import os, re, json, sys, subprocess
+from xxlimited import new
 
 # Local imports
-from utils import (git_commit_hash,
+from utils import (
+    git_commit_hash,
     join_jsons,
     fatal,
     which,
     exists,
-    err)
+    err
+)
 
 from . import version as __version__
 
@@ -154,7 +157,7 @@ def rename(filename):
     return filename
 
 
-def setup(sub_args, ifiles, repo_path, output_path):
+def setup(sub_args, ifiles, repo_path, output_path, resource_bundle=None):
     """Setup the pipeline for execution and creates config file from templates
     @param sub_args <parser.parse_args() object>:
         Parsed arguments for run sub-command
@@ -162,6 +165,8 @@ def setup(sub_args, ifiles, repo_path, output_path):
         Path to installation or source code and its templates
     @param output_path <str>:
         Pipeline output path, created if it does not exist
+    @param resource_bundle <str>:
+        Path to downloaded resource bundle
     @return config <dict>:
          Config dictionary containing metadata to run the pipeline
     """
@@ -220,6 +225,17 @@ def setup(sub_args, ifiles, repo_path, output_path):
             # CLI value can be converted to a string
             v = str(v)
         config['options'][opt] = v
+
+    # Override path of reference files from
+    # default in OpenOmics shared group area
+    # to base path provided by user
+    if sub_args.resource_bundle:
+        default_ref_path = '/data/OpenOmics/references/metavirs'
+        new_ref_path = resource_bundle.rstrip('/')
+        for k, v in config['references'].items():
+            if default_ref_path in v:
+                new_path = v.replace(default_ref_path, new_ref_path)
+                config['references'][k] = new_path
 
     # Save config to output directory
     with open(os.path.join(output_path, 'config.json'), 'w') as fh:

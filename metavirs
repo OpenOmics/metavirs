@@ -116,13 +116,18 @@ def run(sub_args):
     # Step 2. Setup pipeline for execution, 
     # dynamically create config.json config
     # file from user inputs and base config
-    # templates
+    # templates. Also override path of any 
+    # reference files from default in the 
+    # OpenOmics shared group area to base 
+    # path provided by user via the option
+    # --resource-bundle PATH
     config = setup(sub_args, 
         ifiles = input_files,
         repo_path = git_repo,
-        output_path = sub_args.output
+        output_path = sub_args.output,
+        resource_bundle = sub_args.resource_bundle
     )
-
+    
     # Step 3. Resolve docker/singularity bind
     # paths from the config file.
     bindpaths = bind(
@@ -333,7 +338,11 @@ def parsed_arguments(name, description):
     parser = argparse.ArgumentParser(description = '{}: {}'.format(styled_name, description))
 
     # Adding Verison information
-    parser.add_argument('--version', action = 'version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument(
+        '--version', 
+        action = 'version', 
+        version = '%(prog)s {}'.format(__version__)
+    )
 
     # Create sub-command parser
     subparsers = parser.add_subparsers()
@@ -353,6 +362,7 @@ def parsed_arguments(name, description):
                          [--dry-run] [--silent] [--sif-cache SIF_CACHE] \\
                          [--singularity-cache SINGULARITY_CACHE] \\
                          [--tmp-dir TMP_DIR] [--threads THREADS] \\
+                         [--resource-bundle RESOURCE_BUNDLE] \\
                          --input INPUT [INPUT ...] \\
                          --output OUTPUT
 
@@ -430,7 +440,15 @@ def parsed_arguments(name, description):
                                 image will be pulled from Dockerhub. The {2} cache
                                 sub command can be used to create a local SIF cache. 
                                 Please see {2} cache for more information.
-                                   Example: --sif-cache /data/$USER/sifs/
+                                  Example: --sif-cache /data/$USER/sifs/
+          --resource-bundle RESOURCE_BUNDLE
+                                Path to a resource bundle downloaded with the install
+                                sub command. The resource bundle contains the set of 
+                                required reference files for processing any data. The 
+                                path provided to this option will be the path to the 
+                                {2} directory that was created when running the
+                                {2} install sub command.
+                                  Example: --resource-bundle /data/$USER/refs/{2}
           --tmp-dir TMP_DIR     
                                 Path on the file system for writing temporary output 
                                 files. By default, the temporary directory is set to 
@@ -482,8 +500,10 @@ def parsed_arguments(name, description):
           {1}
         """.format(name, __version__, c.bold, c.end))
 
-    # Supressing help message of required args to overcome no sub-parser named groups
-    subparser_run = subparsers.add_parser('run',
+    # Supressing help message of required args 
+    # to overcome no sub-parser named groups
+    subparser_run = subparsers.add_parser(
+        'run',
         help = 'Run the {} pipeline with input files.'.format(name),
         usage = argparse.SUPPRESS,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -494,7 +514,8 @@ def parsed_arguments(name, description):
 
     # Required Arguments
     # Input FastQ files
-    subparser_run.add_argument('--input',
+    subparser_run.add_argument(
+        '--input',
         # Check if the file exists and if it is readable
         type = lambda file: permissions(parser, file, os.R_OK),
         required = True,
@@ -503,7 +524,8 @@ def parsed_arguments(name, description):
     )
 
     # Output Directory (analysis working directory)
-    subparser_run.add_argument('--output',
+    subparser_run.add_argument(
+        '--output',
         type = lambda option: os.path.abspath(os.path.expanduser(option)),
         required = True,
         help = argparse.SUPPRESS
@@ -540,7 +562,8 @@ def parsed_arguments(name, description):
     )
 
     # Name of master job
-    subparser_run.add_argument('--job-name',
+    subparser_run.add_argument(
+        '--job-name',
         type = str,
         required = False,
         default = 'pl:{}'.format(name),
@@ -548,7 +571,8 @@ def parsed_arguments(name, description):
     )
 
     # Dry-run (do not execute the workflow, prints what steps remain)
-    subparser_run.add_argument('--dry-run',
+    subparser_run.add_argument(
+        '--dry-run',
         action = 'store_true',
         required = False,
         default = False,
@@ -556,7 +580,8 @@ def parsed_arguments(name, description):
     )
 
     # Silent output mode
-    subparser_run.add_argument('--silent',
+    subparser_run.add_argument(
+        '--silent',
         action = 'store_true',
         required = False,
         default = False,
@@ -564,21 +589,35 @@ def parsed_arguments(name, description):
     )
     
     # Singularity cache directory (default uses output directory)
-    subparser_run.add_argument('--singularity-cache',
+    subparser_run.add_argument(
+        '--singularity-cache',
         type = lambda option: check_cache(parser, os.path.abspath(os.path.expanduser(option))),
         required = False,
         help = argparse.SUPPRESS
     )
     
     # Local SIF cache directory (default pull from Dockerhub) 
-    subparser_run.add_argument('--sif-cache',
+    subparser_run.add_argument(
+        '--sif-cache',
         type = lambda option: os.path.abspath(os.path.expanduser(option)),
         required = False,
         help = argparse.SUPPRESS
     )
 
+    # Output Directory of downloaded resource bundle, see 
+    # the install sub command for more information on how
+    # to download any required references files locally.
+    subparser_run.add_argument(
+        '--resource-bundle',
+        type = lambda option: os.path.abspath(os.path.expanduser(option)),
+        required = False,
+        default = None,
+        help = argparse.SUPPRESS
+    )
+
     # Base directory to write temporary files 
-    subparser_run.add_argument('--tmp-dir',
+    subparser_run.add_argument(
+        '--tmp-dir',
         type = str,
         required = False,
         default = '/tmp/',
@@ -588,7 +627,8 @@ def parsed_arguments(name, description):
     # Number of threads for the pipeline's main proceess
     # This is only applicable for local rules or when the 
     # pipeline is running in local mode.
-    subparser_run.add_argument('--threads',
+    subparser_run.add_argument(
+        '--threads',
         type = int,
         required = False,
         default = 2,
@@ -637,8 +677,10 @@ def parsed_arguments(name, description):
           {1}
         """.format(name, __version__, c.bold, c.end))
 
-    # Supressing help message of required args to overcome no sub-parser named groups
-    subparser_unlock = subparsers.add_parser('unlock',
+    # Supressing help message of required args 
+    # to overcome no sub-parser named groups
+    subparser_unlock = subparsers.add_parser(
+        'unlock',
         help = 'Unlocks a previous runs output directory.',
         usage = argparse.SUPPRESS,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -649,7 +691,8 @@ def parsed_arguments(name, description):
 
     # Required Arguments
     # Output Directory (analysis working directory)
-    subparser_unlock.add_argument('--output',
+    subparser_unlock.add_argument(
+        '--output',
         type = str,
         required = True,
         help = argparse.SUPPRESS
@@ -686,16 +729,26 @@ def parsed_arguments(name, description):
         resource bundle can be very large so please ensure you have 
         sufficent disk space prior to the download.
 
+        {3}Please Note:{4} 
+          The resource bundle is large and requires about 750 GB of 
+        available disk space. If you are running the pipeline on the 
+        Biowulf cluster, you do NOT need to download the pipeline's
+        resource bundle. It is already accessible to all HPC users.
+
         {3}Required arguments:{4}
           --ref-path REF_PATH
                                 Path where the resource bundle will be
                                 downloaded. Any resouces defined in the
                                 'config/install.json' will be pulled on
-                                to the local filesystem. 
-                                The path provided to this option can be 
-                                passed to the --ref-path option of the 
-                                run sub command. Please see {2} run 
-                                sub command for more information.
+                                to the local filesystem. After the files
+                                have been downloaded, a new directory 
+                                with the name {2} will be created. 
+                                It contains all the required reference 
+                                files of the pipeline. The path to this 
+                                new directory can be passed to the run
+                                sub command's --resource-bundle option.
+                                Please see the run sub command for more 
+                                information.
                                   Example: --ref-path /data/$USER/refs
         
         {3}Orchestration options:{4}
@@ -739,8 +792,10 @@ def parsed_arguments(name, description):
           {1}
         """.format(name, __version__, c.bold, c.end))
 
-    # Supressing help message of required args to overcome no sub-parser named groups
-    subparser_install = subparsers.add_parser('install',
+    # Supressing help message of required args 
+    # to overcome no sub-parser named groups
+    subparser_install = subparsers.add_parser(
+        'install',
         help = 'Download reference files locally.',
         usage = argparse.SUPPRESS,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -751,7 +806,8 @@ def parsed_arguments(name, description):
 
     # Required Arguments
     # Output Directory where file will be downloaded
-    subparser_install.add_argument('--ref-path',
+    subparser_install.add_argument(
+        '--ref-path',
         type = lambda option: os.path.abspath(os.path.expanduser(option)),
         required = True,
         help = argparse.SUPPRESS
@@ -761,7 +817,8 @@ def parsed_arguments(name, description):
     # Dry-run install command,
     # does not pull any remote resources,
     # just shows what will be pulled 
-    subparser_install.add_argument('--dry-run',
+    subparser_install.add_argument(
+        '--dry-run',
         action = 'store_true',
         required = False,
         default = False,
@@ -769,7 +826,8 @@ def parsed_arguments(name, description):
     )
 
     # Forces downloading of all files
-    subparser_install.add_argument('--force',
+    subparser_install.add_argument(
+        '--force',
         action = 'store_true',
         required = False,
         default = False,
@@ -777,7 +835,8 @@ def parsed_arguments(name, description):
     )
 
     # Number of threads for concurrent downloads
-    subparser_install.add_argument('--threads',
+    subparser_install.add_argument(
+        '--threads',
         type = int,
         required = False,
         default = 2,
@@ -847,8 +906,10 @@ def parsed_arguments(name, description):
           {1}
         """.format(name, __version__, c.bold, c.end))
 
-    # Supressing help message of required args to overcome no sub-parser named groups
-    subparser_cache = subparsers.add_parser('cache',
+    # Supressing help message of required args 
+    # to overcome no sub-parser named groups
+    subparser_cache = subparsers.add_parser(
+        'cache',
         help = 'Cache software containers locally.',
         usage = argparse.SUPPRESS,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -859,7 +920,8 @@ def parsed_arguments(name, description):
 
     # Required Arguments
     # Output Directory (analysis working directory)
-    subparser_cache.add_argument('--sif-cache',
+    subparser_cache.add_argument(
+        '--sif-cache',
         type = lambda option: os.path.abspath(os.path.expanduser(option)),
         required = True,
         help = argparse.SUPPRESS
@@ -867,7 +929,8 @@ def parsed_arguments(name, description):
 
     # Optional Arguments
     # Dry-run cache command (do not pull any remote resources)
-    subparser_cache.add_argument('--dry-run',
+    subparser_cache.add_argument(
+        '--dry-run',
         action = 'store_true',
         required = False,
         default = False,
