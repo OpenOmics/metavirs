@@ -724,6 +724,7 @@ rule prep_metaquast:
         report=join(workpath,"{name}","info","{name}.reads_kraken2_report.txt"),
     output:
         txt=join(workpath,"{name}","temp","{name}_reads_class_names.txt"),
+        tmp=temp(join(workpath,"{name}","temp","{name}.metaquast.tmp.fa")),
         fa=join(workpath,"{name}","temp","{name}.metaquast.fa"),
     params:
         rname='prepmetaq',
@@ -740,14 +741,37 @@ rule prep_metaquast:
         | uniq \\
         | tr ' ' '_' \\
     > {output.txt}
-    
+
+    # Subsets NCBI Viral FASTA file
+    # to only include viruses found
+    # in the sample in a more fault
+    # tolerant manner
     paste - - < {params.ncbi_viral} \\
-        | grep -f {output.txt} \\
-        | tr '\\t' '\\n' \\
-        | awk -F ',' '{{print $1}}' \\
-        | tr '/' '_' \\
-        | cut -d '_' -f1-5 \\
-    > {output.fa}
+        > {output.tmp}
+    while read default_pattern; do
+        # Back pattern to search for
+        # if default pattern does not
+        # exist in the NCBI viral FASTA
+        backup_pattern=$(
+            echo "$default_pattern" \\
+                | awk -F '_' '{{print $1}}'
+        )
+        match=$(
+            grep "$default_pattern" {output.tmp} \\
+                || grep "$backup_pattern" {output.tmp} \\
+                || true;
+        )
+        # Check if there was a match
+        # prior to adding to FASTA,
+        # avoids adding empty str
+        if [ "$match" != "" ]; then  
+            echo "$match" \\
+                | tr '\\t' '\\n' \\
+                | awk -F ',' '{{print $1}}' \\
+                | tr '/' '_' \\
+                | cut -d '_' -f1-5
+        fi
+    done < {output.txt} > {output.fa}
     
     mkdir -p {params.outdir}
     faSplit byname {output.fa} {params.outdir}/
