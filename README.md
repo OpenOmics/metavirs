@@ -53,6 +53,11 @@ module load snakemake singularity
 This site is a living document, created for and by members like you. metavirs is maintained by the members of OpenOmics and is improved by continous feedback! We encourage you to contribute new content and make improvements to existing content via pull request to our [GitHub repository](https://github.com/OpenOmics/metavirs).
 
 
+## Citation
+
+If you use this software, please cite it as below:  
+<sup> Skyler Kuhn & Paul Schaughency. (2022). OpenOmics/metavirs. Zenodo. https://doi.org/10.5281/zenodo.7120937</sup>
+
 ## References
 <sup>**1.**  Kurtzer GM, Sochat V, Bauer MW (2017). Singularity: Scientific containers for mobility of compute. PLoS ONE 12(5): e0177459.</sup>  
 <sup>**2.**  Koster, J. and S. Rahmann (2018). "Snakemake-a scalable bioinformatics workflow engine." Bioinformatics 34(20): 3600.</sup>  
