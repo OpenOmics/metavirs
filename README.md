@@ -57,7 +57,24 @@ This site is a living document, created for and by members like you. metavirs is
 
 If you use this software, please cite it as below:  
 
-> Skyler Kuhn & Paul Schaughency. (2022). OpenOmics/metavirs. Zenodo. https://doi.org/10.5281/zenodo.7120937
+**BibTex**  
+```text
+@software{Kuhn_OpenOmics_metavirs_2022,
+    author = {Kuhn, Skyler and Schaughency, Paul},
+    doi = {10.5281/zenodo.7120936},
+    month = {9},
+    title = {{OpenOmics/metavirs}},
+    url = {https://github.com/OpenOmics/metavirs/},
+    year = {2022}
+}
+```
+
+**APA**  
+```text
+Kuhn, S., & Schaughency, P. (2022). OpenOmics/metavirs [Computer software]. https://doi.org/10.5281/zenodo.7120936
+```
+
+For more citation style options, please visit the pipeline's [Zenodo page](https://doi.org/10.5281/zenodo.7120936).
 
 ## References
 <sup>**1.**  Kurtzer GM, Sochat V, Bauer MW (2017). Singularity: Scientific containers for mobility of compute. PLoS ONE 12(5): e0177459.</sup>  
