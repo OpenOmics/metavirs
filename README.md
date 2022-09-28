@@ -56,7 +56,8 @@ This site is a living document, created for and by members like you. metavirs is
 ## Citation
 
 If you use this software, please cite it as below:  
-<sup> Skyler Kuhn & Paul Schaughency. (2022). OpenOmics/metavirs. Zenodo. https://doi.org/10.5281/zenodo.7120937</sup>
+
+> Skyler Kuhn & Paul Schaughency. (2022). OpenOmics/metavirs. Zenodo. https://doi.org/10.5281/zenodo.7120937
 
 ## References
 <sup>**1.**  Kurtzer GM, Sochat V, Bauer MW (2017). Singularity: Scientific containers for mobility of compute. PLoS ONE 12(5): e0177459.</sup>  
