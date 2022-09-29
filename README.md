@@ -4,8 +4,7 @@
   
   **_Viral Metagenomics Pipeline_**
 
-  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7120936.svg)](https://doi.org/10.5281/zenodo.7120936) [![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/OpenOmics/metavirs?color=blue&include_prereleases)](https://github.com/OpenOmics/metavirs/releases) [![Docker Pulls](https://img.shields.io/docker/pulls/skchronicles/metavirs)](https://hub.docker.com/repository/docker/skchronicles/metavirs)  
-  [![tests](https://github.com/OpenOmics/metavirs/workflows/tests/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/main.yaml) [![docs](https://github.com/OpenOmics/metavirs/workflows/docs/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/docs.yml) [![GitHub issues](https://img.shields.io/github/issues/OpenOmics/metavirs?color=brightgreen)](https://github.com/OpenOmics/metavirs/issues)  [![GitHub license](https://img.shields.io/github/license/OpenOmics/metavirs)](https://github.com/OpenOmics/metavirs/blob/main/LICENSE)  
+  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7120936.svg)](https://doi.org/10.5281/zenodo.7120936) [![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/OpenOmics/metavirs?color=blue&include_prereleases)](https://github.com/OpenOmics/metavirs/releases) [![Docker Pulls](https://img.shields.io/docker/pulls/skchronicles/metavirs)](https://hub.docker.com/repository/docker/skchronicles/metavirs) [![tests](https://github.com/OpenOmics/metavirs/workflows/tests/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/main.yaml) [![docs](https://github.com/OpenOmics/metavirs/workflows/docs/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/docs.yml) [![GitHub issues](https://img.shields.io/github/issues/OpenOmics/metavirs?color=brightgreen)](https://github.com/OpenOmics/metavirs/issues)  [![GitHub license](https://img.shields.io/github/license/OpenOmics/metavirs)](https://github.com/OpenOmics/metavirs/blob/main/LICENSE)  
   
   <i>
     This is the home of the pipeline, metavirs. Its long-term goals: to assemble, annotate, and screen enviromental samples like no pipeline before!
@@ -58,7 +57,7 @@ This site is a living document, created for and by members like you. metavirs is
 
 If you use this software, please cite it as below:  
 
-**BibTex**  
+***@BibTex***  
 ```text
 @software{Kuhn_OpenOmics_metavirs_2022,
     author = {Kuhn, Skyler and Schaughency, Paul},
@@ -70,7 +69,7 @@ If you use this software, please cite it as below:
 }
 ```
 
-**APA**  
+***@APA***  
 ```text
 Kuhn, S., & Schaughency, P. (2022). OpenOmics/metavirs [Computer software]. https://doi.org/10.5281/zenodo.7120936
 ```
