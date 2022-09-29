@@ -54,22 +54,24 @@ For more information about issues or trouble-shooting a problem, please checkout
 
 If you use this software, please cite it as below:  
 
-***@BibTex***  
-```text
-@software{Kuhn_OpenOmics_metavirs_2022,
-    author = {Kuhn, Skyler and Schaughency, Paul},
-    doi = {10.5281/zenodo.7120936},
-    month = {9},
-    title = {{OpenOmics/metavirs}},
-    url = {https://github.com/OpenOmics/metavirs/},
-    year = {2022}
-}
-```
+=== "BibTex"
 
-***@APA***  
-```text
-Kuhn, S., & Schaughency, P. (2022). OpenOmics/metavirs [Computer software]. https://doi.org/10.5281/zenodo.7120936
-```
+    ```
+    @software{Kuhn_OpenOmics_metavirs_2022,
+        author = {Kuhn, Skyler and Schaughency, Paul},
+        doi = {10.5281/zenodo.7120936},
+        month = {9},
+        title = {{OpenOmics/metavirs}},
+        url = {https://github.com/OpenOmics/metavirs/},
+        year = {2022}
+    }
+    ```
+
+=== "APA"
+
+    ``` 
+    Kuhn, S., & Schaughency, P. (2022). OpenOmics/metavirs [Computer software]. https://doi.org/10.5281/zenodo.7120936
+    ```
 
 For more citation style options, please visit the pipeline's [Zenodo page](https://doi.org/10.5281/zenodo.7120936).
 
