@@ -5,7 +5,6 @@
 from __future__ import print_function
 from shutil import copytree
 import os, re, json, sys, subprocess
-from xxlimited import new
 
 # Local imports
 from utils import (
