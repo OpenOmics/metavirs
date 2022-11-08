@@ -46,7 +46,7 @@ cd metavirs/
 # Biowulf users should run
 module load snakemake singularity
 # Get usage information
-./metvirs -h
+./metavirs -h
 ```
 
 ## Contribute 
