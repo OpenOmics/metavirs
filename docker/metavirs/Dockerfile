@@ -1,4 +1,4 @@
-# Base image for metavirs,
+# Base image for metavirs (v0.2.0),
 # uses Ubuntu Focal (LTS)
 FROM ubuntu:20.04
 
@@ -18,6 +18,8 @@ FROM ubuntu:20.04
 #  - seqtk/1.3            # apt-get, deafult: 1.3
 #  - spades/3.15.4        # from src, installed: 3.15.4
 #  - ucsc/418             # personal mirror: snapshot Nov 2nd, 2020
+#  - blastn/2.13.0+       # download binary, installed: 2.13.0+
+#  - fastx_toolkit/0.0.13 # download binary, installed: 0.0.13
 LABEL maintainer=kuhnsa@nih.gov
 
 ############### INIT ################
@@ -81,6 +83,8 @@ RUN apt-get update \
         libhat-trie0 \
         libnlopt0 \
         libssw0 \
+        libbz2-dev \
+        liblzma-dev \
     && apt-get clean && apt-get purge \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -232,6 +236,28 @@ RUN wget http://cab.spbu.ru/files/release3.15.4/SPAdes-3.15.4-Linux.tar.gz \
         && rm /opt2/SPAdes-3.15.4-Linux.tar.gz 
 # Add metaspades to $PATH
 ENV PATH="/opt2/SPAdes-3.15.4-Linux/bin:$PATH"
+WORKDIR /opt2
+
+# Install blastn/2.13.0+ from NCBI FTP,
+# not available to apt-get on Ubuntu/20.04.
+# Dependencies already satisfied:
+RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.13.0+-x64-linux.tar.gz \
+        && tar -zvxf ncbi-blast-2.13.0+-x64-linux.tar.gz ./ncbi-blast-2.13.0+/bin/blastn \
+        && rm ncbi-blast-2.13.0+-x64-linux.tar.gz
+# Add blastn to $PATH
+ENV PATH="/opt2/ncbi-blast-2.13.0+/bin:$PATH"
+WORKDIR /opt2
+
+# Install fastx_toolkit/0.0.13 from CSHL,
+# not available to apt-get on Ubuntu/20.04.
+# Dependencies already satisfied:
+RUN mkdir fastx_toolkit \
+        && cd fastx_toolkit \
+        && wget http://hannonlab.cshl.edu/fastx_toolkit/fastx_toolkit_0.0.13_binaries_Linux_2.6_amd64.tar.bz2 \
+        && tar -jvxf fastx_toolkit_0.0.13_binaries_Linux_2.6_amd64.tar.bz2 ./bin/fastq_to_fasta \
+        && rm fastx_toolkit_0.0.13_binaries_Linux_2.6_amd64.tar.bz2
+# Add fastq_to_fasta to $PATH
+ENV PATH="/opt2/fastx_toolkit/bin:$PATH"
 WORKDIR /opt2
 
 ################ POST #################
