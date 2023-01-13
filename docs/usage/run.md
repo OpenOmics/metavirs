@@ -13,7 +13,7 @@ $ metavirs run [--help] [--aggregate] \
      [--mode <slurm,local>] [--job-name JOB_NAME] \
      [--dry-run] [--silent] [--sif-cache SIF_CACHE] \
      [--singularity-cache SINGULARITY_CACHE] \
-     [--tmpdir TMP_DIR] [--threads THREADS] \
+     [--tmp-dir TMP_DIR] [--threads THREADS] \
      [--resource-bundle RESOURCE_BUNDLE] \
       --input INPUT [INPUT ...] \
       --output OUTPUT
@@ -30,7 +30,7 @@ Use you can always use the `-h` option for information on a specific command.
 Each of the following arguments are required. Failure to provide a required argument will result in a non-zero exit-code.
 
   `--input INPUT [INPUT ...]`  
-> **Input FastQ or BAM file(s).**  
+> **Input FastQ file(s).**  
 > *type: file(s)*  
 > 
 > One or more FastQ files can be provided. The pipeline supports single-end and paired-end data. Single-end and paired-end FastQ files can be provided to this option simultaneously. Under the hood, the pipeline will run the correct set of rules and options for a given sample. When providing each input file, please seperate each file with a space. Globbing is supported! This makes selecting FastQ files easy. Note: Input FastQ files must be gzipp-ed.
@@ -143,6 +143,16 @@ Each of the following arguments are optional, and do not need to be provided.
 > 
 > ***Example:*** `--threads 12`
 
+---  
+  `--tmp-dir TMP_DIR`   
+> **Max number of threads for each process.**  
+> *type: path*  
+> *default: `/tmp/`*
+> 
+> Path on the file system for writing temporary output files. By default, the temporary directory is set to '/tmp/' for increased compatibility; however, if you are running the pipeline on a target system with a dedicated scratch space, this option will need to be specified. Ideally, this path should point to a dedicated location on the filesystem for writing tmp files. On many systems, this location is set to somewhere in /scratch. If you need to inject a variable into this string that should NOT be expanded, please quote this options value in single quotes.
+> 
+> ***Example:*** `--tmp-dir /scratch/$USER/`
+
 ## 2.4 Miscellaneous options  
 Each of the following arguments are optional, and do not need to be provided. 
 
@@ -197,8 +207,8 @@ srun -N 1 -n 1 --time=1:00:00 --mem=8gb --cpus-per-task=2 --pty bash
 # Add any missing dependencies to $PATH
 source /gs1/apps/user/rmlspack/share/spack/setup-env.sh
 export PS1="${PS1:-}"
-spack load miniconda3@4.8.2
-source activate snakemake
+spack load -r miniconda3@4.11.0/y4vyh4u
+source activate snakemake7-19-1
 
 # Step 1A.) Dry-run the pipeline,
 # this will display what steps will 
@@ -206,6 +216,8 @@ source activate snakemake
 ./metavirs run --input .tests/*.gz \
     --output /gs1/RTS/NextGen/$USER/metavirs_out \
     --mode slurm \
+    --sif-cache /gs1/RTS/NextGen/metavirs/SIFs/ \
+    --resource-bundle /gs1/RTS/NextGen/metavirs/references/metavirs/ \
     --aggregate \
     --dry-run
 
@@ -218,5 +230,7 @@ source activate snakemake
 ./metavirs run --input .tests/*.gz \
     --output /gs1/RTS/NextGen/$USER/metavirs_out \
     --mode slurm \
+    --sif-cache /gs1/RTS/NextGen/metavirs/SIFs/ \
+    --resource-bundle /gs1/RTS/NextGen/metavirs/references/metavirs/ \
     --aggregate
 ```
