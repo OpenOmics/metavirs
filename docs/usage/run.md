@@ -204,20 +204,20 @@ module load snakemake
 # do not run on head node if you are
 # on a cluster, like Biowulf/BigSky!
 srun -N 1 -n 1 --time=1:00:00 --mem=8gb --cpus-per-task=2 --pty bash
-# Add any missing dependencies to $PATH
-source /gs1/apps/user/rmlspack/share/spack/setup-env.sh
-export PS1="${PS1:-}"
-spack load -r miniconda3@4.11.0/y4vyh4u
-source activate snakemake7-19-1
+
+# Add any missing dependencies to $PATH,
+# adds singularity, snakemake, and metavirs
+source /gs1/RTS/OpenOmics/bin/dependencies.sh
+
 
 # Step 1A.) Dry-run the pipeline,
 # this will display what steps will 
 # be run or what steps still remain.
-./metavirs run --input .tests/*.gz \
-    --output /gs1/RTS/NextGen/$USER/metavirs_out \
+metavirs run --input .tests/*.gz \
+    --output /gs1/Scratch/$USER/metavirs_out \
     --mode slurm \
-    --sif-cache /gs1/RTS/NextGen/metavirs/SIFs/ \
-    --resource-bundle /gs1/RTS/NextGen/metavirs/references/metavirs/ \
+    --sif-cache /gs1/RTS/OpenOmics/SIFs/ \
+    --resource-bundle /gs1/RTS/OpenOmics/references/metavirs/ \
     --aggregate \
     --dry-run
 
@@ -227,10 +227,10 @@ source activate snakemake7-19-1
 # running metavirs in this mode, if
 # you have access to a cluster like
 # Biowulf or BigSky.
-./metavirs run --input .tests/*.gz \
-    --output /gs1/RTS/NextGen/$USER/metavirs_out \
+metavirs run --input .tests/*.gz \
+    --output /gs1/Scratch/$USER/metavirs_out \
     --mode slurm \
-    --sif-cache /gs1/RTS/NextGen/metavirs/SIFs/ \
-    --resource-bundle /gs1/RTS/NextGen/metavirs/references/metavirs/ \
+    --sif-cache /gs1/RTS/OpenOmics/SIFs/ \
+    --resource-bundle /gs1/RTS/OpenOmics/references/metavirs/ \
     --aggregate
 ```
