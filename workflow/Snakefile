@@ -41,6 +41,7 @@ with open(join('config', 'cluster.json')) as fh:
 
 # Imported rules
 include: join("rules", "common.smk")
+include: join("rules", "hooks.smk")
 include: join("rules", "paired-end.smk")
 
 # Targets of the pipeline to build the DAG,
