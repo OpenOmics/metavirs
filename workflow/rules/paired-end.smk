@@ -790,7 +790,7 @@ rule metaquast:
         contigs=get_contigs_fasta,
         dep=join(workpath,"{name}","temp","{name}.metaquast.fa"),
     output:
-        report=join(workpath,"{name}","output","{name}_metaquast","report.html")
+        log=join(workpath,"{name}","output","{name}_metaquast","metaquast.log"),
     params:
         rname='metaq',
         ref=join(workpath,"{name}","temp","metaquastref"),

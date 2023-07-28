@@ -121,7 +121,7 @@ rule all:
             name=samples
         ),
         expand(
-            join(workpath,"{name}","output","{name}_metaquast","report.html"),
+            join(workpath,"{name}","output","{name}_metaquast","metaquast.log"),
             name=samples
         ),
         # Krona, project-level multi-sample report
