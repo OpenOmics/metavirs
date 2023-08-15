@@ -1,6 +1,7 @@
 {
     "references": {
         "adapters": "resources/TruSeq_and_nextera_adapters.fa",
+        "blast_viral_db": "/data/OpenOmics/references/metavirs/blastdb/nt_viruses",
         "host_bowtie2_index": "/data/OpenOmics/references/metavirs/bowtie2/",
         "kraken2_viral_db": "/data/OpenOmics/references/metavirs/kraken2/viral/",
         "kronatools": "/data/OpenOmics/references/metavirs/kronatax_0921/",

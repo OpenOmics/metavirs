@@ -69,5 +69,15 @@
         "threads": "4",
         "mem": "24g",
         "time": "0-18:00:00"
+    },
+    "blast_metaspades_contigs": {
+        "threads": "8",
+        "mem": "24g",
+        "time": "0-18:00:00"
+    },
+    "blast_megahit_contigs": {
+        "threads": "8",
+        "mem": "24g",
+        "time": "0-18:00:00"
     }
 }
