@@ -678,6 +678,116 @@ rule megahit:
     """
 
 
+rule blast_metaspades_contigs:
+    """
+    Data-processing step to blast assembled contigs against nt virsuses database.
+    For more information see:
+    https://ftp.ncbi.nlm.nih.gov/blast/documents/blastdb.html
+    https://ftp.ncbi.nlm.nih.gov/blast/db/nt_viruses-nucl-metadata.json
+    https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.14.0/
+    @Input:
+        FASTA file of assembled metaspades contigs (scatter)
+    @Output:
+        Blast text file containing alignment results of metaspades contigs,
+    """
+    input:
+        contigs=join(workpath,"{name}","output","{name}.metaspades.contigs.fa"),
+    output:
+        blast=join(workpath,"{name}","output","{name}.metaspades_blast.tsv"),
+    params:
+        rname='blastmetaspadest',
+        blast_db=config['references']['blast_viral_db'],
+        header=join(workpath,"{name}","output","{name}.metaspades_blast.header.tsv"),
+        tmp=join(workpath,"{name}","output","{name}.metaspades_blast.tmp.tsv"),
+        outfmt_tabs='\\t'.join([
+            'qaccver', 'saccver', 'staxid', 
+            'ssciname', 'scomname', 'sblastname', 
+            'sscinames', 'stitle', 'pident', 'qlen', 
+            'length', 'mismatch', 'gapopen', 'qstart',
+            'qend', 'sstart', 'send', 'evalue', 'bitscore'
+        ]),
+        outfmt_spaces=' '.join([
+            'qaccver', 'saccver', 'staxid', 
+            'ssciname', 'scomname', 'sblastname', 
+            'sscinames', 'stitle', 'pident', 'qlen', 
+            'length', 'mismatch', 'gapopen', 'qstart',
+            'qend', 'sstart', 'send', 'evalue', 'bitscore'
+        ]),
+    threads: int(allocated("threads", "blast_metaspades_contigs", cluster))
+    container: config['images']['blast']
+    shell: """
+    # BLAST metaspades contigs against viral database
+    echo -e "#{params.outfmt_tabs}" \\
+    > {params.header}
+    blastn -query {input.contigs} \\
+        -db {params.blast_db} \\
+        -out {params.tmp} \\
+        -outfmt "6 {params.outfmt_spaces}" \\
+        -max_target_seqs 1 \\
+        -num_threads {threads}
+    # Adding header to blast output
+    cat {params.header} \\
+        {params.tmp} \\
+    > {output.blast}
+    rm -f {params.header} {params.tmp}
+    """
+
+
+rule blast_megahit_contigs:
+    """
+    Data-processing step to blast assembled contigs against nt virsuses database.
+    For more information see:
+    https://ftp.ncbi.nlm.nih.gov/blast/documents/blastdb.html
+    https://ftp.ncbi.nlm.nih.gov/blast/db/nt_viruses-nucl-metadata.json
+    https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.14.0/
+    @Input:
+        FASTA file of assembled megahit contigs (scatter)
+    @Output:
+        Blast text file containing alignment results of megahit contigs,
+    """
+    input:
+        contigs=join(workpath,"{name}","output","{name}.megahit.contigs.fa"),
+    output:
+        blast=join(workpath,"{name}","output","{name}.megahit_blast.tsv"),
+    params:
+        rname='blastmegahit',
+        blast_db=config['references']['blast_viral_db'],
+        header=join(workpath,"{name}","output","{name}.megahit_blast.header.tsv"),
+        tmp=join(workpath,"{name}","output","{name}.megahit_blast.tmp.tsv"),
+        outfmt_tabs='\\t'.join([
+            'qaccver', 'saccver', 'staxid', 
+            'ssciname', 'scomname', 'sblastname', 
+            'sscinames', 'stitle', 'pident', 'qlen', 
+            'length', 'mismatch', 'gapopen', 'qstart',
+            'qend', 'sstart', 'send', 'evalue', 'bitscore'
+        ]),
+        outfmt_spaces=' '.join([
+            'qaccver', 'saccver', 'staxid', 
+            'ssciname', 'scomname', 'sblastname', 
+            'sscinames', 'stitle', 'pident', 'qlen', 
+            'length', 'mismatch', 'gapopen', 'qstart',
+            'qend', 'sstart', 'send', 'evalue', 'bitscore'
+        ]),
+    threads: int(allocated("threads", "blast_megahit_contigs", cluster))
+    container: config['images']['blast']
+    shell: """
+    # BLAST megahit contigs against viral database
+    echo -e "#{params.outfmt_tabs}" \\
+    > {params.header}
+    blastn -query {input.contigs} \\
+        -db {params.blast_db} \\
+        -out {params.tmp} \\
+        -outfmt "6 {params.outfmt_spaces}" \\
+        -max_target_seqs 1 \\
+        -num_threads {threads}
+    # Adding header to blast output
+    cat {params.header} \\
+        {params.tmp} \\
+    > {output.blast}
+    rm -f {params.header} {params.tmp}
+    """
+
+
 rule krona:
     """
     Reporting step to create a interactive Krona charts based on

@@ -109,6 +109,21 @@ rule all:
             join(workpath,"{name}","output","{name}.megahit.bam"), 
             name=samples
         ),
+        # BLAST Metaspades contigs against nt virsuses database,
+        # conditional runs with pair-end samples,
+        # metaspades does NOT support single-end,
+        # https://github.com/ablab/spades/discussions/1026
+        # @imported from rules/paired-end.smk
+        expand(
+            join(workpath,"{name}","output","{name}.metaspades_blast.tsv"), 
+            name=pe_samples
+        ),
+        # BLAST Megahit contigs against nt virsuses database,
+        # @imported from rules/paired-end.smk
+        expand(
+            join(workpath,"{name}","output","{name}.megahit_blast.tsv"), 
+            name=samples
+        ),
         # Krona, taxonomic classification report
         # @imported from rules/paired-end.smk
         expand(
