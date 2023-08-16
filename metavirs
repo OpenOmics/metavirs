@@ -231,6 +231,9 @@ def install(sub_args):
     # extract the archive
     if not sub_args.dry_run:
         for target in install_config['install']:
+            if not install_config['install'][target]:
+                # Skip over empty keys in install.json 
+                continue
             # Gather all chunks
             download_links = list(install_config['install'][target].keys())
             local_chunks = [
@@ -241,7 +244,7 @@ def install(sub_args):
             # TODO: add an option
             # blow away the chunks
             # after the restore
-            print('Merging chunks... {0}'.format(','.join(local_chunks)))
+            print('Merging {0} chunks... {1}'.format(target,','.join(local_chunks)))
             tarball = cat(
                 local_chunks, 
                 os.path.join(
