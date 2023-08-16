@@ -54,6 +54,11 @@
             "https://hpc.nih.gov/~OpenOmics/metavirs/metavirs_v1.0.0_chunk-51": "8008963915d4b3d7a41273688a59aa96",
             "https://hpc.nih.gov/~OpenOmics/metavirs/metavirs_v1.0.0_chunk-52": "6939ed2d40cbbb0760660478a0e1ec6f",
             "https://hpc.nih.gov/~OpenOmics/metavirs/metavirs_v1.0.0_chunk-53": "40dcffbe9e0ef89a243dffca7431137c"
+        },
+        "blast_db": {
+            "https://hpc.nih.gov/~OpenOmics/metavirs/blastdb/metavirs_blastdb_v1.2.0_chunk-01": "007526de7389f8898eb005c189e325d5",
+            "https://hpc.nih.gov/~OpenOmics/metavirs/blastdb/metavirs_blastdb_v1.2.0_chunk-02": "831820381f533cc135c0ca03561c48c9",
+            "https://hpc.nih.gov/~OpenOmics/metavirs/blastdb/metavirs_blastdb_v1.2.0_chunk-03": "a1c393eee694b327f39dcc9597f7e056"
         }
     }
 }
