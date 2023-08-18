@@ -5,6 +5,16 @@
         "time": "0-04:00:00",
         "gres": "lscratch:64"
     },
+    "validator_r1": {
+        "threads": "2",
+        "mem": "16g",
+        "time": "0-4:00:00"
+    },
+    "validator_r2": {
+        "threads": "2",
+        "mem": "16g",
+        "time": "0-4:00:00"
+    },
     "fastqc": {
         "threads": "16",
         "mem": "32g",
