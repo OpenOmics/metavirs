@@ -4,17 +4,17 @@
   
   **_Viral Metagenomics Pipeline_**
 
-  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7120936.svg)](https://doi.org/10.5281/zenodo.7120936) [![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/OpenOmics/metavirs?color=blue&include_prereleases)](https://github.com/OpenOmics/metavirs/releases) [![Docker Pulls](https://img.shields.io/docker/pulls/skchronicles/metavirs)](https://hub.docker.com/repository/docker/skchronicles/metavirs)<br>[![tests](https://github.com/OpenOmics/metavirs/workflows/tests/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/main.yaml) [![docs](https://github.com/OpenOmics/metavirs/workflows/docs/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/docs.yml) [![GitHub issues](https://img.shields.io/github/issues/OpenOmics/metavirs?color=brightgreen)](https://github.com/OpenOmics/metavirs/issues)  [![GitHub license](https://img.shields.io/github/license/OpenOmics/metavirs)](https://github.com/OpenOmics/metavirs/blob/main/LICENSE)  
+  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7120936.svg)](https://doi.org/10.5281/zenodo.7120936) [![GitHub release (latest SemVer including pre-releases)](https://img.shields.io/github/v/release/OpenOmics/metavirs?color=blue&include_prereleases)](https://github.com/OpenOmics/metavirs/releases) [![Docker Pulls](https://img.shields.io/docker/pulls/skchronicles/metavirs)](https://hub.docker.com/repository/docker/skchronicles/metavirs)<br>[![tests](https://github.com/OpenOmics/metavirs/workflows/tests/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/main.yaml) [![docs](https://github.com/OpenOmics/metavirs/workflows/docs/badge.svg)](https://github.com/OpenOmics/metavirs/actions/workflows/docs.yml) [![GitHub issues](https://img.shields.io/github/issues/OpenOmics/metavirs?color=brightgreen)](https://github.com/OpenOmics/metavirs/issues)  [![GitHub license](https://img.shields.io/github/license/OpenOmics/metavirs)](https://github.com/OpenOmics/metavirs/blob/main/LICENSE)<br><img src="./docs/assets/icons/nih-award.png" alt="nih_directors_award_badge" width="25%">    
   
   <i>
-    This is the home of the pipeline, metavirs. Its long-term goals: to assemble, annotate, and screen enviromental samples like no pipeline before!
+    This is the home of the pipeline, metavirs. Its long-term goals: are to assemble, annotate, and screen environmental samples like no pipeline before!
   </i>
 </div>
 
 ## Overview
 Welcome to metavirs! Before getting started, we highly recommend reading through [metavirs' documentation](https://openomics.github.io/metavirs/).
 
-The **`./metavirs`** pipeline is composed several inter-related sub commands to setup and run the pipeline across different systems. Each of the available sub commands perform different functions: 
+The **`./metavirs`** pipeline is composed of several inter-related subcommands to set up and run the pipeline across different systems. Each of the available sub-commands performs different functions: 
 
  * [<code>metavirs <b>run</b></code>](https://openomics.github.io/metavirs/usage/run/): Run the metavirs pipeline with your input files.
  * [<code>metavirs <b>unlock</b></code>](https://openomics.github.io/metavirs/usage/unlock/): Unlocks a previous runs output directory.
@@ -22,13 +22,13 @@ The **`./metavirs`** pipeline is composed several inter-related sub commands to 
  * [<code>metavirs <b>cache</b></code>](https://openomics.github.io/metavirs/usage/cache/): Cache software containers locally.
 
 
-metavirs is a comprehensive viral metagenomics pipeline to assemble, annotate, and classify microorganisms in enviromental samples. It relies on technologies like [Singularity<sup>1</sup>](https://singularity.lbl.gov/) to maintain the highest-level of reproducibility. The pipeline consists of a series of data processing and quality-control steps orchestrated by [Snakemake<sup>2</sup>](https://snakemake.readthedocs.io/en/stable/), a flexible and scalable workflow management system, to submit jobs to a cluster.
+metavirs is a comprehensive viral metagenomics pipeline to assemble, annotate, and classify microorganisms in environmental samples. It relies on technologies like [Singularity<sup>1</sup>](https://singularity.lbl.gov/) to maintain the highest level of reproducibility. The pipeline consists of a series of data processing and quality-control steps orchestrated by [Snakemake<sup>2</sup>](https://snakemake.readthedocs.io/en/stable/), a flexible and scalable workflow management system, to submit jobs to a cluster.
 
-The pipeline is compatible with data generated from Illumina short-read sequencing technologies. As input, it accepts a set of FastQ files and can be run locally on a compute instance or on-premise using a cluster. A user can define the method or mode of execution. The pipeline can submit jobs to a cluster using a job scheduler like SLURM (more coming soon!). A hybrid approach ensures the pipeline is accessible to all users.
+The pipeline is compatible with data generated from Illumina short-read sequencing technologies. As input, it accepts a set of FastQ files and can be run locally on a compute instance or on-premise using a cluster. A user can define the method or mode of execution. The pipeline can submit jobs to a cluster using a job scheduler like SLURM (more coming soon!). A hybrid approach ensures the pipeline is accessible to all users. 
 
-Before getting started, we highly recommend reading through the [usage](https://openomics.github.io/metavirs/usage/run/) section of each available sub command.
+Before getting started, we highly recommend reading through the [usage](https://openomics.github.io/metavirs/usage/run/) section of each available sub-command.
 
-For more information about issues or trouble-shooting a problem, please checkout our [FAQ](https://openomics.github.io/metavirs/faq/questions/) prior to [opening an issue on Github](https://github.com/OpenOmics/metavirs/issues).
+For more information about issues or troubleshooting a problem, please check out our [FAQ](https://openomics.github.io/metavirs/faq/questions/) prior to [opening an issue on Github](https://github.com/OpenOmics/metavirs/issues).
 
 ## Dependencies
 **Requires:** `singularity>=3.5`  `snakemake>=6.0` 
@@ -50,7 +50,7 @@ module load snakemake singularity
 ```
 
 ## Contribute 
-This site is a living document, created for and by members like you. metavirs is maintained by the members of OpenOmics and is improved by continous feedback! We encourage you to contribute new content and make improvements to existing content via pull request to our [GitHub repository](https://github.com/OpenOmics/metavirs).
+This site is a living document, created for and by members like you. metavirs is maintained by the members of OpenOmics and is improved by continuous feedback! We encourage you to contribute new content and make improvements to existing content via pull requests to our [GitHub repository](https://github.com/OpenOmics/metavirs).
 
 
 ## Citation
