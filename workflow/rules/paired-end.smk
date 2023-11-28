@@ -759,7 +759,7 @@ rule blast_metaspades_xlsx:
             'qend', 'sstart', 'send', 'evalue', 'bitscore'
         ]),
         extension=".metaspades_blast.tsv",
-        script=join(workpath, "workflow", "scripts", "file2spreadsheet.py"),
+        script=join(workpath, "workflow", "scripts", "files2spreadsheet.py"),
     threads: int(allocated("threads", "blast_metaspades_xlsx", cluster))
     container: config['images']['blast']
     shell: """
@@ -867,7 +867,7 @@ rule blast_megahit_xlsx:
             'qend', 'sstart', 'send', 'evalue', 'bitscore'
         ]),
         extension=".megahit_blast.tsv",
-        script=join(workpath, "workflow", "scripts", "file2spreadsheet.py"),
+        script=join(workpath, "workflow", "scripts", "files2spreadsheet.py"),
     threads: int(allocated("threads", "blast_megahit_xlsx", cluster))
     container: config['images']['blast']
     shell: """
