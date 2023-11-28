@@ -118,12 +118,17 @@ rule all:
             join(workpath,"{name}","output","{name}.metaspades_blast.tsv"), 
             name=pe_samples
         ),
+        provided(
+            [join(workpath,"Project","metaspades_blast.xlsx")],
+            pe_samples
+        ),
         # BLAST Megahit contigs against nt virsuses database,
         # @imported from rules/paired-end.smk
         expand(
             join(workpath,"{name}","output","{name}.megahit_blast.tsv"), 
             name=samples
         ),
+        join(workpath,"Project","megahit_blast.xlsx"),
         # Krona, taxonomic classification report
         # @imported from rules/paired-end.smk
         expand(

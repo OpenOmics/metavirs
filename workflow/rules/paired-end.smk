@@ -695,7 +695,7 @@ rule blast_metaspades_contigs:
     output:
         blast=join(workpath,"{name}","output","{name}.metaspades_blast.tsv"),
     params:
-        rname='blastmetaspadest',
+        rname='blastmetaspades',
         blast_db=config['references']['blast_viral_db'],
         header=join(workpath,"{name}","output","{name}.metaspades_blast.header.tsv"),
         tmp=join(workpath,"{name}","output","{name}.metaspades_blast.tmp.tsv"),
@@ -717,7 +717,7 @@ rule blast_metaspades_contigs:
     container: config['images']['blast']
     shell: """
     # BLAST metaspades contigs against viral database
-    echo -e "#{params.outfmt_tabs}" \\
+    echo -e "{params.outfmt_tabs}" \\
     > {params.header}
     blastn -query {input.contigs} \\
         -db {params.blast_db} \\
@@ -730,6 +730,59 @@ rule blast_metaspades_contigs:
         {params.tmp} \\
     > {output.blast}
     rm -f {params.header} {params.tmp}
+    """
+
+
+rule blast_metaspades_xlsx:
+    """
+    Data-processing step to aggregate the blast-ed metaspades contigs results into
+    a single XLSX file. Within the output XLSX file, there will be a tab for each
+    sample's blast results. The first tab in the spreadsheet will contain concat
+    blast results across all samples.
+    @Input:
+        Blast texts file containing alignment results of metaspades contigs (gather)
+    @Output:
+        Blast XLSX file containing alignment results of metaspades contigs for all samples
+    """
+    input:
+        blasts=expand(join(workpath,"{name}","output","{name}.metaspades_blast.tsv"), name=pe_samples),
+    output:
+        tsv=join(workpath,"Project","metaspades_blast.tsv"), 
+        excel=join(workpath,"Project","metaspades_blast.xlsx"),
+    params:
+        rname='blastmetaspadesxlsx',
+        outfmt_tabs='\\t'.join([
+            'sample', 'qaccver', 'saccver', 'staxid', 
+            'ssciname', 'scomname', 'sblastname', 
+            'sscinames', 'stitle', 'pident', 'qlen', 
+            'length', 'mismatch', 'gapopen', 'qstart',
+            'qend', 'sstart', 'send', 'evalue', 'bitscore'
+        ]),
+        extension=".metaspades_blast.tsv",
+        script=join(workpath, "workflow", "scripts", "file2spreadsheet.py"),
+    threads: int(allocated("threads", "blast_metaspades_xlsx", cluster))
+    container: config['images']['blast']
+    shell: """
+    # Create aggregated single file 
+    # results of BLAST-ed metaspades 
+    # contigs against viral database
+    echo -e "{params.outfmt_tabs}" \\
+    > {output.tsv}
+    # Adding a column to the output
+    # that contains each sample name
+    awk -F '\\t' -v OFS='\\t' \\
+        'FNR>1 {{sub("{params.extension}", "", FILENAME); print FILENAME, $0}}' \\
+        {input.blasts} \\
+    > {output.tsv}
+
+    # Create an excel spreadsheet 
+    # containing the blast results 
+    # of aligning the metaspades
+    # contigs against NCBI viral db 
+    {params.script} \\
+        --rm-suffix "{params.extension}" \\
+        --input {output.tsv} {input.blasts} \\
+        --output {output.excel}
     """
 
 
@@ -772,7 +825,7 @@ rule blast_megahit_contigs:
     container: config['images']['blast']
     shell: """
     # BLAST megahit contigs against viral database
-    echo -e "#{params.outfmt_tabs}" \\
+    echo -e "{params.outfmt_tabs}" \\
     > {params.header}
     blastn -query {input.contigs} \\
         -db {params.blast_db} \\
@@ -785,6 +838,59 @@ rule blast_megahit_contigs:
         {params.tmp} \\
     > {output.blast}
     rm -f {params.header} {params.tmp}
+    """
+
+
+rule blast_megahit_xlsx:
+    """
+    Data-processing step to aggregate the blast-ed megahit contigs results into
+    a single XLSX file. Within the output XLSX file, there will be a tab for each
+    sample's blast results. The first tab in the spreadsheet will contain concat
+    blast results across all samples.
+    @Input:
+        Blast texts file containing alignment results of megahit contigs (gather)
+    @Output:
+        Blast XLSX file containing alignment results of megahit contigs for all samples
+    """
+    input:
+        blasts=expand(join(workpath,"{name}","output","{name}.megahit_blast.tsv"), name=samples),
+    output:
+        tsv=join(workpath,"Project","megahit_blast.tsv"), 
+        excel=join(workpath,"Project","megahit_blast.xlsx"),
+    params:
+        rname='blastmegahitxlsx',
+        outfmt_tabs='\\t'.join([
+            'sample', 'qaccver', 'saccver', 'staxid', 
+            'ssciname', 'scomname', 'sblastname', 
+            'sscinames', 'stitle', 'pident', 'qlen', 
+            'length', 'mismatch', 'gapopen', 'qstart',
+            'qend', 'sstart', 'send', 'evalue', 'bitscore'
+        ]),
+        extension=".megahit_blast.tsv",
+        script=join(workpath, "workflow", "scripts", "file2spreadsheet.py"),
+    threads: int(allocated("threads", "blast_megahit_xlsx", cluster))
+    container: config['images']['blast']
+    shell: """
+    # Create aggregated single file 
+    # results of BLAST-ed megahit 
+    # contigs against viral database
+    echo -e "{params.outfmt_tabs}" \\
+    > {output.tsv}
+    # Adding a column to the output
+    # that contains each sample name
+    awk -F '\\t' -v OFS='\\t' \\
+        'FNR>1 {{sub("{params.extension}", "", FILENAME); print FILENAME, $0}}' \\
+        {input.blasts} \\
+    > {output.tsv}
+
+    # Create an excel spreadsheet 
+    # containing the blast results 
+    # of aligning the megahit
+    # contigs against NCBI viral db 
+    {params.script} \\
+        --rm-suffix "{params.extension}" \\
+        --input {output.tsv} {input.blasts} \\
+        --output {output.excel}
     """
 
 

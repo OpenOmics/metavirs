@@ -298,9 +298,9 @@ def excel_writer(files, spreadsheet,  skip_comments=None, remove_suffix = ''):
                 # additional suffix to remove
                 # we must take into account the
                 # extension has already been
-                # removed prior to 
+                # removed, see above
                 cleaned_suffix, ext = os.path.splitext(remove_suffix)
-                sheet = sheet.split(cleaned_suffix)[0]
+                sheet = sheet.rsplit(cleaned_suffix, 1)[0]
             
             # Sheet name cannot exceed 
             # 31 characters in length
