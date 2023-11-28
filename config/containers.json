@@ -2,6 +2,6 @@
     "images": {
         "fastqvalidator": "docker://nciccbr/ccbr_fastqvalidator:v0.1.0",
         "metavirs": "docker://skchronicles/metavirs:v0.1.0",
-        "blast": "docker://skchronicles/blast:v0.1.0"
+        "blast": "docker://skchronicles/blast:v0.2.0"
     }
 }
