@@ -771,9 +771,9 @@ rule blast_metaspades_xlsx:
     # Adding a column to the output
     # that contains each sample name
     awk -F '\\t' -v OFS='\\t' \\
-        'FNR>1 {{sub("{params.extension}", "", FILENAME); print FILENAME, $0}}' \\
+        'FNR>1 {{sub(".*/", "", FILENAME); sub("{params.extension}", "", FILENAME); print FILENAME, $0}}' \\
         {input.blasts} \\
-    > {output.tsv}
+    >> {output.tsv}
 
     # Create an excel spreadsheet 
     # containing the blast results 
@@ -879,9 +879,9 @@ rule blast_megahit_xlsx:
     # Adding a column to the output
     # that contains each sample name
     awk -F '\\t' -v OFS='\\t' \\
-        'FNR>1 {{sub("{params.extension}", "", FILENAME); print FILENAME, $0}}' \\
+        'FNR>1 {{sub(".*/", "", FILENAME); sub("{params.extension}", "", FILENAME); print FILENAME, $0}}' \\
         {input.blasts} \\
-    > {output.tsv}
+    >> {output.tsv}
 
     # Create an excel spreadsheet 
     # containing the blast results 
