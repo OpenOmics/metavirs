@@ -84,6 +84,7 @@ RUN pip3 install --upgrade pip \
     && pip3 install matplotlib \
     && pip3 install multiqc==1.14 \
     && pip3 install pandas \
+    && pip3 install XlsxWriter \
     && pip3 install scipy
 
 # Perl fix issue
