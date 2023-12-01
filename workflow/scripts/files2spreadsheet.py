@@ -12,7 +12,7 @@ import xlsxwriter
 
 # Script metadata
 __author__  = "Skyler Kuhn"
-__version__ = "v0.1.0"
+__version__ = "v0.2.0"
 
 _help = textwrap.dedent(
 """./file2spreadsheet.py:
@@ -20,6 +20,7 @@ Creates an excel file from a list of input files.
 
 @Usage:
     $ ./file2spreadsheet.py [-h] [--version] \\
+            [--add-auto-filters] \\
             [--rm-suffix RM_SUFFIX] \\
             [--comment-symbol COMMENT_SYMBOL] \\
             --input FILE_1 [FILE_2 ...] \\
@@ -63,6 +64,12 @@ Creates an excel file from a list of input files.
                     this character will be skipped. By
                     default, all lines of the file will
                     be included and nothing is skipped.
+
+    -a, --add-auto-filters
+                    Adds auto-filters to all columns 
+                    in a worksheet. Excel auto-filters 
+                    apply drop-down filters/selectors
+                    to the column headers in a sheet.
                     
     --h, --help     Shows this help message and exits.
 
@@ -151,6 +158,17 @@ def parse_arguments():
         required=False,
         default='',
         type=str,
+        help = argparse.SUPPRESS
+    )
+
+    # Applies auto-filters  
+    # to column headers
+    parser.add_argument(
+        '-a',
+        '--add-auto-filters', 
+        required=False,
+        default=False,
+        action = 'store_true',
         help = argparse.SUPPRESS
     )
 
@@ -266,7 +284,7 @@ def csv(filename, subset=[], skip='#', **kwargs):
     return pd.read_csv(filename, comment=skip, **kwargs)
 
 
-def excel_writer(files, spreadsheet,  skip_comments=None, remove_suffix = ''):
+def excel_writer(files, spreadsheet,  skip_comments=None, remove_suffix = '', add_auto_filters=False):
     """Takes a list of files and creates one excel spreadsheet.
     Each file will becomes a sheet in the spreadsheet where the 
     name of the sheet is the basename of the file with the extension
@@ -317,6 +335,8 @@ def excel_writer(files, spreadsheet,  skip_comments=None, remove_suffix = ''):
                     )
                 ) + 2  # adding a little extra space
                 worksheet.set_column(idx, idx, max_len)  # set column width
+                if add_auto_filters:
+                    worksheet.autofilter(0, 0, df.shape[0], df.shape[1])
 
 
 def main():
@@ -335,13 +355,18 @@ def main():
     # X tab/worksheet name 
     rm_suffix = args.rm_suffix
 
+    # Apply auto filters to 
+    # column headers in a sheet
+    auto_filter = args.add_auto_filters
+
     # Create XLSX file from the list
     # of input files 
     excel_writer(
         files=inputs,
         spreadsheet=output,
         skip_comments=comment_char,
-        remove_suffix=rm_suffix
+        remove_suffix=rm_suffix,
+        add_auto_filters=auto_filter
     )
 
 

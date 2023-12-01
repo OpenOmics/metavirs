@@ -780,6 +780,7 @@ rule blast_metaspades_xlsx:
     # of aligning the metaspades
     # contigs against NCBI viral db 
     {params.script} \\
+        --add-auto-filters \\
         --rm-suffix "{params.extension}" \\
         --input {output.tsv} {input.blasts} \\
         --output {output.excel}
@@ -888,6 +889,7 @@ rule blast_megahit_xlsx:
     # of aligning the megahit
     # contigs against NCBI viral db 
     {params.script} \\
+        --add-auto-filters \\
         --rm-suffix "{params.extension}" \\
         --input {output.tsv} {input.blasts} \\
         --output {output.excel}
