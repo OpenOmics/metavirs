@@ -206,13 +206,33 @@ rule rawfastqc:
     params:
         rname='rawfqc',
         outdir=join(workpath,"{name}","rawQC"),
+        tmpdir=tmpdir,
     threads: int(allocated("threads", "rawfastqc", cluster))
     # envmodules: config['tools']['fastqc']
     container: config['images']['metavirs']
     shell: """
+    # Setups temporary directory for
+    # intermediate files with built-in 
+    # mechanism for deletion on exit
+    if [ ! -d "{params.tmpdir}" ]; then mkdir -p "{params.tmpdir}"; fi
+    tmp=$(mktemp -d -p "{params.tmpdir}")
+    trap 'rm -rf "${{tmp}}"' EXIT
+    
+    # Running fastqc with local
+    # disk or a tmpdir, fastqc
+    # has been observed to lock
+    # up gpfs filesystems, adding
+    # this on request by HPC staff. 
     fastqc {input} \\
         -t {threads} \\
-        -o {params.outdir}
+        -o "${{tmp}}"
+    
+    # Copy output files from tmpdir
+    # to output directory
+    find "${{tmp}}" \\
+        -type f \\
+        \\( -name '*.html' -o -name '*.zip' \\) \\
+        -exec cp {{}} {params.outdir} \\;
     """
 
 
@@ -288,6 +308,7 @@ rule fastqc:
     params:
         rname='fqc',
         outdir=join(workpath,"{name}","QC"),
+        tmpdir=tmpdir,
         # Building single-end and paired-end options
         # Input trimmed R2 FastQ file: PE='{trim.r2}', SE=''
         r2_option = lambda w: "{0}.R2.trim.fastq".format(
@@ -297,9 +318,28 @@ rule fastqc:
     # envmodules: config['tools']['fastqc']
     container: config['images']['metavirs']
     shell: """
+    # Setups temporary directory for
+    # intermediate files with built-in 
+    # mechanism for deletion on exit
+    if [ ! -d "{params.tmpdir}" ]; then mkdir -p "{params.tmpdir}"; fi
+    tmp=$(mktemp -d -p "{params.tmpdir}")
+    trap 'rm -rf "${{tmp}}"' EXIT
+    
+    # Running fastqc with local
+    # disk or a tmpdir, fastqc
+    # has been observed to lock
+    # up gpfs filesystems, adding
+    # this on request by HPC staff. 
     fastqc {input.r1} {params.r2_option} \\
         -t {threads} \\
-        -o {params.outdir}
+        -o "${{tmp}}"
+    
+    # Copy output files from tmpdir
+    # to output directory
+    find "${{tmp}}" \\
+        -type f \\
+        \\( -name '*.html' -o -name '*.zip' \\) \\
+        -exec cp {{}} {params.outdir} \\;
     """
 
 
