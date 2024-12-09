@@ -528,8 +528,15 @@ rule metaspades:
         {output.k2txt} > {output.krona}
     cp {output.krona} {output.tmp1}
 
+
+    # Check the number of assembled contigs
+    # prior to running CAT. CAT contigs can
+    # fail if this file is empty or only 
+    # contains a few contigs.
     mkdir -p {params.cat_dir}
-    CAT contigs -n {threads} \\
+    n_contigs=$(grep -c '^>' {output.contigs} || true)
+    echo "Number of contigs from metaspades: ${{n_contigs}}"
+    {{ CAT contigs -n {threads} \\
         --force \\
         -c {output.contigs} \\
         -d {params.cat_db} \\
@@ -544,7 +551,21 @@ rule metaspades:
         -c {output.contigs} \\
         -i {output.cat_names} \\
         -o {output.cat_summary}
-    
+    }} || {{
+        # CAT can fail if provided an empty FASTA file
+        echo "WARNING: CAT failed!" 
+        echo "This could be due to an issue upstream,"
+        echo "such as insufficent sequencing depth,"
+        echo "low viral load, or poor quality reads."
+        echo "Each of these issues can lead to poor"
+        echo "quality assemblies and a low number of"
+        echo "assembled contigs."
+        echo "Please check the input and output of"
+        echo "metaspades to troubleshoot the issue!"
+        touch {output}
+        exit 0
+    }}
+
     # Try to grep for Virsuses, may pipefail
     # if nothing is found, touch output file 
     {{ grep "Viruses:" {output.cat_names} \\
@@ -660,8 +681,14 @@ rule megahit:
         {output.k2txt} > {output.krona}
     cp {output.krona} {output.tmp1}
 
+    # Check the number of assembled contigs
+    # prior to running CAT. CAT contigs can
+    # fail if this file is empty or only 
+    # contains a few contigs.
     mkdir -p {params.cat_dir}/
-    CAT contigs -n {threads} \\
+    n_contigs=$(grep -c '^>' {output.contigs} || true)
+    echo "Number of contigs from metaspades: ${{n_contigs}}"
+    {{ CAT contigs -n {threads} \\
         --force \\
         -c {output.contigs} \\
         -d {params.cat_db} \\
@@ -676,7 +703,21 @@ rule megahit:
         -c {output.contigs} \\
         -i {output.cat_names} \\
         -o {output.cat_summary}
-    
+    }} || {{
+        # CAT can fail if provided an empty FASTA file
+        echo "WARNING: CAT failed!" 
+        echo "This could be due to an issue upstream,"
+        echo "such as insufficent sequencing depth,"
+        echo "low viral load, or poor quality reads."
+        echo "Each of these issues can lead to poor"
+        echo "quality assemblies and a low number of"
+        echo "assembled contigs."
+        echo "Please check the input and output of"
+        echo "megahit to troubleshoot the issue!"
+        touch {output}
+        exit 0
+    }}
+
     # Try to grep for Virsuses, may pipefail
     # if nothing is found, touch output file 
     {{ grep "Viruses:" {output.cat_names} \\
@@ -1063,7 +1104,18 @@ rule metaquast:
         --gene-finding \\
         --unique-mapping \\
         -o {params.outdir} \\
-        --threads {threads}
+        --threads {threads} || {{
+        # metaquast can fail if provided an empty FASTA file
+        echo "WARNING: metaquast failed!" 
+        echo "This could be due to an issue upstream,"
+        echo "such as insufficent sequencing depth,"
+        echo "low viral load, or poor quality reads."
+        echo "Each of these issues can lead to poor"
+        echo "quality assemblies and a low number of"
+        echo "assembled contigs."
+        touch {output}
+        exit 0
+    }}
     """
 
 
