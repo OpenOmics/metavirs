@@ -470,6 +470,15 @@ rule metaspades:
         k2txt=join(workpath,"{name}","kraken2","{name}.metaspades.contigs.kraken2"),
         krona=join(workpath,"{name}","kraken2","{name}.metaspades.contigs.kraken2.krona"),
         tmp1=join(workpath,"{name}","temp","{name}.metaspades_kraken2.txt"),
+        ktaxids=join(workpath,"{name}","temp","{name}.metaspades_kraken2_taxid.txt"),
+        ktmp=join(workpath,"{name}","temp","{name}.metaspades_kraken2.temp"),
+        knames=join(workpath,"{name}","temp","{name}.metaspades_kraken2_names.txt"),
+        kcounts_temp=join(workpath,"{name}","temp","{name}.metaspades_kraken2_counts.temp"),
+        kcounts_txt=join(workpath,"{name}","temp","{name}.metaspades_kraken2_counts.txt"),
+        kflt=join(workpath,"{name}","temp","{name}.metaspades_kraken2_filtered.txt"),
+        ktaxlineage=join(workpath,"{name}","temp","{name}.metaspades_kraken2_taxlineage.tsv"),
+        kviral_unf=join(workpath,"{name}","temp","{name}.metaspades_kraken2_unfiltered_viraltable.tsv"),
+        kviral_flt=join(workpath,"{name}","temp","{name}.metaspades_kraken2_filtered_viraltable.tsv"),
         cat_class=join(workpath,"{name}","CAT","{name}.metaspades.contig2classification.txt"),
         cat_names=join(workpath,"{name}","CAT","{name}.metaspades.official_names.txt"),
         cat_summary=join(workpath,"{name}","CAT","{name}.metaspades.summary.txt"),
@@ -484,6 +493,8 @@ rule metaspades:
         final=join(workpath,"{name}","output","{name}.metaspades.bam"),        
     params:
         rname='metaspades',
+        filter_length=config['options']['length_filter'],
+        taxonkit_db=config['references']['taxonkit_db'],
         viral_db=config['references']['kraken2_viral_db'],
         cat_db=config['references']['CAT_db'],
         cat_tax=config['references']['CAT_taxonomy'],
@@ -513,6 +524,8 @@ rule metaspades:
     if [ -d "{wildcards.name}/metaspades" ]; then
         rm -rf "{wildcards.name}/metaspades"
     fi
+
+    # Assemble reads into contigs with metaspades
     metaspades.py -t {threads} \\
         -m {params.memory} \\
         {params.metaspades_sepe} {input.r1} {params.r2_option} \\
@@ -520,6 +533,7 @@ rule metaspades:
     mkdir -p {wildcards.name}/output
     mv {wildcards.name}/metaspades/contigs.fasta {output.contigs}
 
+    # Annotate the contigs with kraken2
     kraken2  --threads {threads} \\
         --db {params.viral_db} {output.contigs} \\
         --report {output.report} \\
@@ -527,7 +541,6 @@ rule metaspades:
     awk -v OFS='\\t' '{{split($2,a,"_"); if ($1 == "C") print $2,$3,a[6]}}' \\
         {output.k2txt} > {output.krona}
     cp {output.krona} {output.tmp1}
-
 
     # Check the number of assembled contigs
     # prior to running CAT. CAT contigs can
@@ -563,7 +576,6 @@ rule metaspades:
         echo "Please check the input and output of"
         echo "metaspades to troubleshoot the issue!"
         touch {output}
-        exit 0
     }}
 
     # Try to grep for Virsuses, may pipefail
@@ -587,6 +599,8 @@ rule metaspades:
         {output.tmp4} \\
     > {output.cat_contigs}
 
+    # Build an index with assembled contigs
+    # and align reads against them
     bowtie2-build --threads {threads} \\
         {output.contigs} \\
         {wildcards.name}/temp/{wildcards.name}_metaspades
@@ -594,7 +608,6 @@ rule metaspades:
         -x {wildcards.name}/temp/{wildcards.name}_metaspades \\
         {params.bowtie2_sepe} {input.r1} {params.r2_option} \\
         -S {output.sam}
-    
     samtools view -@ {threads} \\
         -bS {output.sam} > {output.bam} 
     samtools sort \\
@@ -603,6 +616,53 @@ rule metaspades:
         -o {output.final}
     samtools index \\
         -@ {threads} {output.final}
+    
+    # Filter results based on contig length,
+    # get counts for the number of reads aligning
+    # to each contig, and create a counts table
+    # with counts and taxonomic classifications,
+    # Get taxids from intermediate results
+    cut -f2 {output.tmp1} \\
+    > {output.ktaxids}
+    # Get contig names and coverage
+    cut -f1,3 {output.tmp1} \\
+    > {output.ktmp}
+    # Get contig names
+    cut -f1 {output.tmp1} \\
+    > {output.knames}
+    # Get counts of each contig in matching order
+    set +o pipefail  # grep will fail -f file is empty
+    samtools idxstats {output.final} \\
+        | grep -f {output.knames} \\
+        | cut -f3 \\
+    > {output.kcounts_temp}
+    set -o pipefail
+    # Create text file with contig name, 
+    # coverage, and counts
+    paste \\
+        {output.ktmp} \\
+        {output.kcounts_temp} \\
+    > {output.kcounts_txt}
+    # Create a unfiltered and contig length 
+    # filtered table with taxonomic information
+    awk -F '_' -v OFS='\\t' '$4+0>={params.filter_length} {{print}}' \\
+    > {output.kflt}
+    cat {output.ktaxids} \\
+        | taxonkit reformat \\
+            --data-dir {params.taxonkit_db} \\
+            -I 1 \\
+            -r "Unassigned" \\
+            -f "{{k}}\\t{{p}}\\t{{c}}\\t{{o}}\\t{{f}}\\t{{g}}\\t{{s}}\\t{{t}}" \\
+    > {output.ktaxlineage}
+    # Unfiltered viral taxonomic table
+    paste \\
+        {output.kcounts_txt} \\
+        {output.ktaxlineage} \\
+    > {output.kviral_unf}
+    # Filtered viral taxonomic table
+    awk -F '_' -v OFS='\\t' \\
+        '$4+0>={params.filter_length} {{print}}' {output.kviral_unf} \\
+    > {output.kviral_flt}
     """
 
 
@@ -623,6 +683,15 @@ rule megahit:
         k2txt=join(workpath,"{name}","kraken2","{name}.megahit.contigs.kraken2"),
         krona=join(workpath,"{name}","kraken2","{name}.megahit.contigs.kraken2.krona"),
         tmp1=join(workpath,"{name}","temp","{name}.megahit_kraken2.txt"),
+        ktaxids=join(workpath,"{name}","temp","{name}.megahit_kraken2_taxid.txt"),
+        ktmp=join(workpath,"{name}","temp","{name}.megahit_kraken2.temp"),
+        knames=join(workpath,"{name}","temp","{name}.megahit_kraken2_names.txt"),
+        kcounts_temp=join(workpath,"{name}","temp","{name}.megahit_kraken2_counts.temp"),
+        kcounts_txt=join(workpath,"{name}","temp","{name}.megahit_kraken2_counts.txt"),
+        kflt=join(workpath,"{name}","temp","{name}.megahit_kraken2_filtered.txt"),
+        ktaxlineage=join(workpath,"{name}","temp","{name}.megahit_kraken2_taxlineage.tsv"),
+        kviral_unf=join(workpath,"{name}","temp","{name}.megahit_kraken2_unfiltered_viraltable.tsv"),
+        kviral_flt=join(workpath,"{name}","temp","{name}.megahit_kraken2_filtered_viraltable.tsv"),
         cat_class=join(workpath,"{name}","CAT","{name}.megahit.contig2classification.txt"),
         cat_names=join(workpath,"{name}","CAT","{name}.megahit.official_names.txt"),
         cat_summary=join(workpath,"{name}","CAT","{name}.megahit.summary.txt"),
@@ -637,6 +706,8 @@ rule megahit:
         final=join(workpath,"{name}","output","{name}.megahit.bam"),  
     params:
         rname='megahit',
+        filter_length=config['options']['length_filter'],
+        taxonkit_db=config['references']['taxonkit_db'],
         viral_db=config['references']['kraken2_viral_db'],
         cat_db=config['references']['CAT_db'],
         cat_tax=config['references']['CAT_taxonomy'],
@@ -665,12 +736,15 @@ rule megahit:
     if [ -d "{wildcards.name}/megahit" ]; then
         rm -rf "{wildcards.name}/megahit"
     fi
+
+    # Assemble reads into contigs with megahit
     megahit -t {threads} \\
         {params.megahit_sepe} {input.r1} {params.r2_option} \\
         --out-prefix=megahit \\
         -o {wildcards.name}/megahit
     tr ' ' '_' < {wildcards.name}/megahit/megahit.contigs.fa > {output.contigs}
 
+    # Annotate the contigs with kraken2
     kraken2  --threads {threads} \\
         --db {params.viral_db} {output.contigs} \\
         --report {output.report} \\
@@ -715,7 +789,6 @@ rule megahit:
         echo "Please check the input and output of"
         echo "megahit to troubleshoot the issue!"
         touch {output}
-        exit 0
     }}
 
     # Try to grep for Virsuses, may pipefail
@@ -740,6 +813,8 @@ rule megahit:
         {output.tmp4} \\
     > {output.cat_contigs}
 
+    # Build an index with assembled contigs
+    # and align reads against them
     bowtie2-build --threads {threads} \\
         {output.contigs} \\
         {wildcards.name}/temp/{wildcards.name}_megahit
@@ -747,7 +822,6 @@ rule megahit:
         -x {wildcards.name}/temp/{wildcards.name}_megahit \\
         {params.bowtie2_sepe} {input.r1} {params.r2_option} \\
         -S {output.sam}
-    
     samtools view -@ {threads} \\
         -bS {output.sam} > {output.bam} 
     samtools sort \\
@@ -756,6 +830,53 @@ rule megahit:
         -o {output.final}
     samtools index \\
         -@ {threads} {output.final}
+
+    # Filter results based on contig length,
+    # get counts for the number of reads aligning
+    # to each contig, and create a counts table
+    # with counts and taxonomic classifications,
+    # Get taxids from intermediate results
+    cut -f2 {output.tmp1} \\
+    > {output.ktaxids}
+    # Get contig names and coverage
+    cut -f1,3 {output.tmp1} \\
+    > {output.ktmp}
+    # Get contig names
+    cut -f1 {output.tmp1} \\
+    > {output.knames}
+    # Get counts of each contig in matching order
+    set +o pipefail # grep will fail -f file is empty
+    samtools idxstats {output.final} \\
+        | grep -f {output.knames} \\
+        | cut -f3 \\
+    > {output.kcounts_temp}
+    set -o pipefail
+    # Create text file with contig name, 
+    # coverage, and counts
+    paste \\
+        {output.ktmp} \\
+        {output.kcounts_temp} \\
+    > {output.kcounts_txt}
+    # Create a unfiltered and contig length 
+    # filtered table with taxonomic information
+    awk -F '\\t' '{{split($1,a,"="); if (a[4] >= {params.filter_length}) print $0}}' \\
+    > {output.kflt}
+    cat {output.ktaxids} \\
+        | taxonkit reformat \\
+            --data-dir {params.taxonkit_db} \\
+            -I 1 \\
+            -r "Unassigned" \\
+            -f "{{k}}\\t{{p}}\\t{{c}}\\t{{o}}\\t{{f}}\\t{{g}}\\t{{s}}\\t{{t}}" \\
+    > {output.ktaxlineage}
+    # Unfiltered viral taxonomic table
+    paste \\
+        {output.kcounts_txt} \\
+        {output.ktaxlineage} \\
+    > {output.kviral_unf}
+    # Filtered viral taxonomic table
+    awk -F '\\t' '{{split($1,a,"="); if (a[4] >= {params.filter_length}) print $0}}' \\
+        {output.kviral_unf} \\
+    > {output.kviral_flt}
     """
 
 
@@ -1188,6 +1309,7 @@ rule prep_aggregate_megahit_scatter:
         {input.f2} \\
     > {output.f2}
     """
+
 
 rule prep_aggregate_metaspades_gather:
     """

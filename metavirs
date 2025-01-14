@@ -360,7 +360,7 @@ def parsed_arguments(name, description):
         {0}: {1}
 
         {3}Synopsis:{4} Run the pipeline with your raw data.
-          $ {2} run [--help] [--aggregate] \\
+          $ {2} run [--help] [--aggregate] [--length-filter LENGTH_FILTER] \\
                          [--mode <slurm,local>] [--job-name JOB_NAME] \\
                          [--dry-run] [--silent] [--sif-cache SIF_CACHE] \\
                          [--singularity-cache SINGULARITY_CACHE] \\
@@ -393,6 +393,14 @@ def parsed_arguments(name, description):
                                 default, any resulting reports will be created at 
                                 a per-sample level.
                                   Example: --aggregate
+          --length-filter LENGTH_FILTER
+                                Filter contigs by total length (bp). The contig 
+                                length filter is used to remove any annotated 
+                                contigs less than this threshold. Annotating small
+                                contigs can to lower-confidence classifications.
+                                This filter is only applied to metaspades contigs,
+                                default: 500.
+                                  Example: --length-filter 500
 
         {3}Orchestration options:{4}
           --mode {{slurm,local}}  
@@ -549,6 +557,15 @@ def parsed_arguments(name, description):
         action = 'store_true',
         required = False,
         default = False,
+        help = argparse.SUPPRESS
+    )
+
+    # Contig length filter
+    subparser_run.add_argument(
+        '--length-filter',
+        type = int,
+        required = False,
+        default = 500,
         help = argparse.SUPPRESS
     )
 
