@@ -92,8 +92,10 @@ def get_annotated_contigs(wildcards):
         i = [
             join(workpath,"{0}".format(wildcards.name),"temp","{0}.metaspades_CAT.txt".format(wildcards.name)),
             join(workpath,"{0}".format(wildcards.name),"temp","{0}.metaspades_kraken2.txt".format(wildcards.name)),
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.metaspades_kraken2_filtered.txt".format(wildcards.name)),
             join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_CAT.txt".format(wildcards.name)),
-            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_kraken2.txt".format(wildcards.name))
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_kraken2.txt".format(wildcards.name)),
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_kraken2_filtered.txt".format(wildcards.name))
         ]
         return i
     else:
@@ -102,7 +104,8 @@ def get_annotated_contigs(wildcards):
         wildcards.name
         i = [
             join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_CAT.txt".format(wildcards.name)),
-            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_kraken2.txt".format(wildcards.name))
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_kraken2.txt".format(wildcards.name)),
+            join(workpath,"{0}".format(wildcards.name),"temp","{0}.megahit_kraken2_filtered.txt".format(wildcards.name))
         ]
         return i
 
@@ -120,8 +123,10 @@ def get_aggregated_results(wildcards):
         # Return metaspades and megahit results
         return [
             join(workpath,"Project","temp","metaspades_kraken2.krona"),
+            join(workpath,"Project","temp","metaspades_kraken2_filtered.krona"),
             join(workpath,"Project","temp","metaspades_CAT.krona"),
             join(workpath,"Project","temp","megahit_kraken2.krona"),
+            join(workpath,"Project","temp","megahit_kraken2_filtered.krona"),
             join(workpath,"Project","temp","megahit_CAT.krona")
         ]
     else:
@@ -129,6 +134,7 @@ def get_aggregated_results(wildcards):
         # return only megahit results 
         return [
             join(workpath,"Project","temp","megahit_kraken2.krona"),
+            join(workpath,"Project","temp","megahit_kraken2_filtered.krona"),
             join(workpath,"Project","temp","megahit_CAT.krona")
         ]
 
@@ -646,6 +652,7 @@ rule metaspades:
     # Create a unfiltered and contig length 
     # filtered table with taxonomic information
     awk -F '_' -v OFS='\\t' '$4+0>={params.filter_length} {{print}}' \\
+        {output.tmp1} \\
     > {output.kflt}
     cat {output.ktaxids} \\
         | taxonkit reformat \\
@@ -860,6 +867,7 @@ rule megahit:
     # Create a unfiltered and contig length 
     # filtered table with taxonomic information
     awk -F '\\t' '{{split($1,a,"="); if (a[4] >= {params.filter_length}) print $0}}' \\
+        {output.tmp1} \\
     > {output.kflt}
     cat {output.ktaxids} \\
         | taxonkit reformat \\
@@ -1255,23 +1263,33 @@ rule prep_aggregate_metaspades_scatter:
     input:
         f1=join(workpath,"{name}","temp","{name}.metaspades_kraken2.txt"),
         f2=join(workpath,"{name}","temp","{name}.metaspades_CAT.txt"),
+        f3=join(workpath,"{name}","temp","{name}.metaspades_kraken2_filtered.txt"),
     output:
         f1=join(workpath,"Project","temp","{name}.metaspades.contigs.kraken2.krona.meta"),
         f2=join(workpath,"Project","temp","{name}.metaspades.contigs.CAT.krona.meta"),
+        f3=join(workpath,"Project","temp","{name}.metaspades_filtered.contigs.kraken2.krona.meta"),
     params:
         rname='prepagg',
         sample='{name}',
     threads: int(allocated("threads", "prep_aggregate_metaspades_scatter", cluster))
     container: config['images']['metavirs']
     shell: """
+    # Adding sample name to results per-sample results,
+    # metaspades and kraken2
     awk -v var="{params.sample}" \\
         '{{print var"_"$0}}' \\
         {input.f1} \\
     > {output.f1}
+    # metaspades and CAT
     awk -v var="{params.sample}" \\
         '{{print var"_"$0}}' \\
         {input.f2} \\
     > {output.f2}
+    # Filtered metaspades and kraken
+    awk -v var="{params.sample}" \\
+        '{{print var"_"$0}}' \\
+        {input.f3} \\
+    > {output.f3}
     """
 
 
@@ -1290,24 +1308,33 @@ rule prep_aggregate_megahit_scatter:
     input:
         f1=join(workpath,"{name}","temp","{name}.megahit_kraken2.txt"),
         f2=join(workpath,"{name}","temp","{name}.megahit_CAT.txt"),
+        f3=join(workpath,"{name}","temp","{name}.megahit_kraken2_filtered.txt"),
     output:
         f1=join(workpath,"Project","temp","{name}.megahit.contigs.kraken2.krona.meta"),
         f2=join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"),
+        f3=join(workpath,"Project","temp","{name}.megahit_filtered.contigs.kraken2.krona.meta"),
     params:
         rname='prepagg',
         sample='{name}',
     threads: int(allocated("threads", "prep_aggregate_megahit_scatter", cluster))
     container: config['images']['metavirs']
     shell: """
-    # Create aggregated contig annotations
+    # Adding sample name to results per-sample results,
+    # metaspades and kraken2
     awk -v var="{params.sample}" \\
         '{{print var"_"$0}}' \\
         {input.f1} \\
     > {output.f1}
+    # metaspades and CAT
     awk -v var="{params.sample}" \\
         '{{print var"_"$0}}' \\
         {input.f2} \\
     > {output.f2}
+    # Filtered metaspades and kraken2
+    awk -v var="{params.sample}" \\
+        '{{print var"_"$0}}' \\
+        {input.f3} \\
+    > {output.f3}
     """
 
 
@@ -1326,24 +1353,33 @@ rule prep_aggregate_metaspades_gather:
     input:
         f1=expand(join(workpath,"Project","temp","{name}.metaspades.contigs.kraken2.krona.meta"), name=pe_samples), 
         f2=expand(join(workpath,"Project","temp","{name}.metaspades.contigs.CAT.krona.meta"), name=pe_samples),
+        f3=expand(join(workpath,"Project","temp","{name}.metaspades_filtered.contigs.kraken2.krona.meta"), name=pe_samples),
     output:
         f1=join(workpath,"Project","temp","metaspades_kraken2.krona"),
         f2=join(workpath,"Project","temp","metaspades_CAT.krona"),
+        f3=join(workpath,"Project","temp","metaspades_kraken2_filtered.krona"),
     params:
         rname='prepagg',
         search=join(workpath,"Project","temp"),
     threads: int(allocated("threads", "prep_aggregate_metaspades_gather", cluster))
     container: config['images']['metavirs']
     shell: """
-    # Create aggregated contig annotations
+    # Create aggregated contig annotations across all samples,
+    # Gather metaspades and kraken2 results 
     find {params.search} \\
         -name '*.metaspades.contigs.kraken2.krona.meta' \\
         -exec cat {{}} \\; \\
     > {output.f1}
+    # Gather metaspades and CAT results 
     find {params.search} \\
         -name '*.metaspades.contigs.CAT.krona.meta' \\
         -exec cat {{}} \\; \\
     > {output.f2}
+    # Gather filtered metaspades and kraken2 results
+    find {params.search} \\
+        -name '*.metaspades_filtered.contigs.kraken2.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f3}
     """
 
 
@@ -1362,24 +1398,33 @@ rule prep_aggregate_megahit_gather:
     input:
         f1=expand(join(workpath,"Project","temp","{name}.megahit.contigs.kraken2.krona.meta"), name=samples), 
         f2=expand(join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"), name=samples),
+        f3=expand(join(workpath,"Project","temp","{name}.megahit_filtered.contigs.kraken2.krona.meta"), name=samples),
     output:
         f1=join(workpath,"Project","temp","megahit_kraken2.krona"),
         f2=join(workpath,"Project","temp","megahit_CAT.krona"),
+        f3=join(workpath,"Project","temp","megahit_kraken2_filtered.krona"),
     params:
         rname='prepagg',
         search=join(workpath,"Project","temp"),
     threads: int(allocated("threads", "prep_aggregate_megahit_gather", cluster))
     container: config['images']['metavirs']
     shell: """
-    # Create aggregated contig annotations
+    # Create aggregated contig annotations across all samples,
+    # Gather megahit and kraken2 results
     find {params.search} \\
         -name '*.megahit.contigs.kraken2.krona.meta' \\
         -exec cat {{}} \\; \\
     > {output.f1}
+    # Gather megahit and CAT results
     find {params.search} \\
         -name '*.megahit.contigs.CAT.krona.meta' \\
         -exec cat {{}} \\; \\
     > {output.f2}
+    # Gather filtered megahit and kraken2 results
+        find {params.search} \\
+        -name '*.megahit_filtered.contigs.kraken2.krona.meta' \\
+        -exec cat {{}} \\; \\
+    > {output.f3}
     """
 
 
