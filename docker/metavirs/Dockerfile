@@ -224,7 +224,7 @@ RUN wget https://github.com/dutilh/CAT/archive/refs/tags/v5.2.3.tar.gz \
         && tar -xvzf v5.2.3.tar.gz \
         && rm /opt2/v5.2.3.tar.gz
 # Add CAT to $PATH
-ENV PATH="/opt2/CAT-5.2.3/CAT_pack:$PATH"
+ENV PATH="/opt2/CAT_pack-5.2.3/CAT_pack:$PATH"
 WORKDIR /opt2
 
 # Install spades/3.15.4 manually, latest version
