@@ -74,7 +74,6 @@ def get_contigs_fasta(wildcards):
         return i
 
 
-
 def get_annotated_contigs(wildcards):
     """
     Returns a samples annotated contigs text files.
@@ -607,7 +606,7 @@ rule metaspades:
 
     # Build an index with assembled contigs
     # and align reads against them
-    bowtie2-build --threads {threads} \\
+    {{ bowtie2-build --threads {threads} \\
         {output.contigs} \\
         {wildcards.name}/temp/{wildcards.name}_metaspades
     bowtie2 -p {threads} \\
@@ -622,6 +621,13 @@ rule metaspades:
         -o {output.final}
     samtools index \\
         -@ {threads} {output.final}
+    }} || {{
+        # Bowtie failed, maybe due to empty contigs FASTA file
+        echo "WARNING: An error occurred while running bowtie!"
+        echo "Please see the check the inputs to bowtie2-build"
+        echo "and bowtie2 to debug the issue."
+        touch {output}
+    }}
     
     # Filter results based on contig length,
     # get counts for the number of reads aligning
@@ -822,7 +828,7 @@ rule megahit:
 
     # Build an index with assembled contigs
     # and align reads against them
-    bowtie2-build --threads {threads} \\
+    {{ bowtie2-build --threads {threads} \\
         {output.contigs} \\
         {wildcards.name}/temp/{wildcards.name}_megahit
     bowtie2 -p {threads} \\
@@ -837,6 +843,13 @@ rule megahit:
         -o {output.final}
     samtools index \\
         -@ {threads} {output.final}
+    }} || {{
+        # Bowtie failed, maybe due to empty contigs FASTA file
+        echo "WARNING: An error occurred while running bowtie!"
+        echo "Please see the check the inputs to bowtie2-build"
+        echo "and bowtie2 to debug the issue."
+        touch {output}
+    }} 
 
     # Filter results based on contig length,
     # get counts for the number of reads aligning
