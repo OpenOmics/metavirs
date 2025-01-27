@@ -484,6 +484,9 @@ rule metaspades:
         ktaxlineage=join(workpath,"{name}","temp","{name}.metaspades_kraken2_taxlineage.tsv"),
         kviral_unf=join(workpath,"{name}","output","{name}.metaspades_kraken2_unfiltered_viraltable.tsv"),
         kviral_flt=join(workpath,"{name}","output","{name}.metaspades_kraken2_filtered_viraltable.tsv"),
+        kviral_flt_family=join(workpath,"{name}","output","{name}.metaspades_kraken2_filtered_viraltable.family-level.tsv"),
+        kviral_flt_genus=join(workpath,"{name}","output","{name}.metaspades_kraken2_filtered_viraltable.genus-level.tsv"),
+        kviral_flt_species=join(workpath,"{name}","output","{name}.metaspades_kraken2_filtered_viraltable.species-level.tsv"),
         cat_class=join(workpath,"{name}","CAT","{name}.metaspades.contig2classification.txt"),
         cat_names=join(workpath,"{name}","CAT","{name}.metaspades.official_names.txt"),
         cat_summary=join(workpath,"{name}","CAT","{name}.metaspades.summary.txt"),
@@ -498,6 +501,7 @@ rule metaspades:
         final=join(workpath,"{name}","output","{name}.metaspades.bam"),        
     params:
         rname='metaspades',
+        script=join(workpath, "workflow", "scripts", "collapse_on_taxa.py"),
         filter_length=config['options']['length_filter'],
         taxonkit_db=config['references']['taxonkit_db'],
         viral_db=config['references']['kraken2_viral_db'],
@@ -668,14 +672,34 @@ rule metaspades:
             -f "{{k}}\\t{{p}}\\t{{c}}\\t{{o}}\\t{{f}}\\t{{g}}\\t{{s}}\\t{{t}}" \\
     > {output.ktaxlineage}
     # Unfiltered viral taxonomic table
+    echo -e "contig\\tcov\\tcount\\ttaxid\\tkingdom\\tphylum\\tclass\\torder\\tfamily\\tgenus\\tspecies\\tstrain" \\
+    > {output.kviral_unf}
     paste \\
         {output.kcounts_txt} \\
         {output.ktaxlineage} \\
-    > {output.kviral_unf}
+    >> {output.kviral_unf}
     # Filtered viral taxonomic table
-    awk -F '_' -v OFS='\\t' \\
-        '$4+0>={params.filter_length} {{print}}' {output.kviral_unf} \\
+    head -1 {output.kviral_unf} \\
     > {output.kviral_flt}
+    awk -F '_' -v OFS='\\t' \\
+        '{{ if (NR==1) {{print}} else if ($4+0>={params.filter_length}) {{print}} }}' \\
+        {output.kviral_unf} \\
+    >> {output.kviral_flt}
+    # Collapse and aggregate cov/counts at family-level
+    python3 {params.script} \\
+        --input {output.kviral_flt} \\
+        --output {output.kviral_flt_family} \\
+        --collapse-on-taxa family
+    # Collapse and aggregate cov/counts at genus-level
+    python3 {params.script} \\
+        --input {output.kviral_flt} \\
+        --output {output.kviral_flt_genus} \\
+        --collapse-on-taxa genus
+    # Collapse and aggregate cov/counts at species-level
+    python3 {params.script} \\
+        --input {output.kviral_flt} \\
+        --output {output.kviral_flt_species} \\
+        --collapse-on-taxa species
     """
 
 
@@ -705,6 +729,9 @@ rule megahit:
         ktaxlineage=join(workpath,"{name}","temp","{name}.megahit_kraken2_taxlineage.tsv"),
         kviral_unf=join(workpath,"{name}","output","{name}.megahit_kraken2_unfiltered_viraltable.tsv"),
         kviral_flt=join(workpath,"{name}","output","{name}.megahit_kraken2_filtered_viraltable.tsv"),
+        kviral_flt_family=join(workpath,"{name}","output","{name}.megahit_kraken2_filtered_viraltable.family-level.tsv"),
+        kviral_flt_genus=join(workpath,"{name}","output","{name}.megahit_kraken2_filtered_viraltable.genus-level.tsv"),
+        kviral_flt_species=join(workpath,"{name}","output","{name}.megahit_kraken2_filtered_viraltable.species-level.tsv"),
         cat_class=join(workpath,"{name}","CAT","{name}.megahit.contig2classification.txt"),
         cat_names=join(workpath,"{name}","CAT","{name}.megahit.official_names.txt"),
         cat_summary=join(workpath,"{name}","CAT","{name}.megahit.summary.txt"),
@@ -719,6 +746,7 @@ rule megahit:
         final=join(workpath,"{name}","output","{name}.megahit.bam"),  
     params:
         rname='megahit',
+        script=join(workpath, "workflow", "scripts", "collapse_on_taxa.py"),
         filter_length=config['options']['length_filter'],
         taxonkit_db=config['references']['taxonkit_db'],
         viral_db=config['references']['kraken2_viral_db'],
@@ -890,14 +918,33 @@ rule megahit:
             -f "{{k}}\\t{{p}}\\t{{c}}\\t{{o}}\\t{{f}}\\t{{g}}\\t{{s}}\\t{{t}}" \\
     > {output.ktaxlineage}
     # Unfiltered viral taxonomic table
+    echo -e "contig\\tcov\\tcount\\ttaxid\\tkingdom\\tphylum\\tclass\\torder\\tfamily\\tgenus\\tspecies\\tstrain" \\
+    > {output.kviral_unf}
     paste \\
         {output.kcounts_txt} \\
         {output.ktaxlineage} \\
-    > {output.kviral_unf}
+    >> {output.kviral_unf}
     # Filtered viral taxonomic table
-    awk -F '\\t' '{{split($1,a,"="); if (a[4] >= {params.filter_length}) print $0}}' \\
-        {output.kviral_unf} \\
+    head -1 {output.kviral_unf} \\
     > {output.kviral_flt}
+    awk -F '\\t' '{{split($1,a,"="); if (NR==1) {{print}}  else if (a[4] >= {params.filter_length}) print $0}}' \\
+        {output.kviral_unf} \\
+    >> {output.kviral_flt}
+    # Collapse and aggregate cov/counts at family-level
+    python3 {params.script} \\
+        --input {output.kviral_flt} \\
+        --output {output.kviral_flt_family} \\
+        --collapse-on-taxa family
+    # Collapse and aggregate cov/counts at genus-level
+    python3 {params.script} \\
+        --input {output.kviral_flt} \\
+        --output {output.kviral_flt_genus} \\
+        --collapse-on-taxa genus
+    # Collapse and aggregate cov/counts at species-level
+    python3 {params.script} \\
+        --input {output.kviral_flt} \\
+        --output {output.kviral_flt_species} \\
+        --collapse-on-taxa species
     """
 
 
