@@ -679,12 +679,10 @@ rule metaspades:
         {output.ktaxlineage} \\
     >> {output.kviral_unf}
     # Filtered viral taxonomic table
-    head -1 {output.kviral_unf} \\
-    > {output.kviral_flt}
     awk -F '_' -v OFS='\\t' \\
         '{{ if (NR==1) {{print}} else if ($4+0>={params.filter_length}) {{print}} }}' \\
         {output.kviral_unf} \\
-    >> {output.kviral_flt}
+    > {output.kviral_flt}
     # Collapse and aggregate cov/counts at family-level
     python3 {params.script} \\
         --input {output.kviral_flt} \\
@@ -925,11 +923,9 @@ rule megahit:
         {output.ktaxlineage} \\
     >> {output.kviral_unf}
     # Filtered viral taxonomic table
-    head -1 {output.kviral_unf} \\
-    > {output.kviral_flt}
     awk -F '\\t' '{{split($1,a,"="); if (NR==1) {{print}}  else if (a[4] >= {params.filter_length}) print $0}}' \\
         {output.kviral_unf} \\
-    >> {output.kviral_flt}
+    > {output.kviral_flt}
     # Collapse and aggregate cov/counts at family-level
     python3 {params.script} \\
         --input {output.kviral_flt} \\
