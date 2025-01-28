@@ -31,7 +31,7 @@ Before getting started, we highly recommend reading through the [usage](https://
 For more information about issues or troubleshooting a problem, please check out our [FAQ](https://openomics.github.io/metavirs/faq/questions/) prior to [opening an issue on Github](https://github.com/OpenOmics/metavirs/issues).
 
 ## Dependencies
-**Requires:** `singularity>=3.5`  `snakemake>=6.0` 
+**Requires:** `singularity>=3.5`  `snakemake<=7.32.3`
 
 At the current moment, the pipeline only has two dependencies: snakemake and singularity. With that being said, [snakemake](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) and [singularity](https://singularity.lbl.gov/all-releases) must be installed on the target system. Snakemake orchestrates the execution of each step in the pipeline. To guarantee the highest level of reproducibility, each step of the pipeline relies on versioned images from [DockerHub](https://hub.docker.com/repository/docker/skchronicles/metavirs). 
 
