@@ -9,7 +9,7 @@ Setting up the metavirs pipeline is fast and easy! In its most basic form, <code
 
 ## 2. Synopsis
 ```text
-$ metavirs run [--help] [--aggregate] \
+$ metavirs run [--help] [--aggregate] [--length-filter LENGTH_FILTER] \
      [--mode <slurm,local>] [--job-name JOB_NAME] \
      [--dry-run] [--silent] [--sif-cache SIF_CACHE] \
      [--singularity-cache SINGULARITY_CACHE] \
@@ -57,6 +57,16 @@ Each of the following arguments are optional, and do not need to be provided.
 > Aggregates contig annotation results into one mutli-sample, project-level interactive Krona report. By default, any resulting reports will be created at a per-sample level.
 >
 > ***Example:*** `--aggregate`
+
+---
+  `--length-filter LENGTH_FILTER`            
+> **Filter contigs by total length (bp).**  
+> *type: integer*
+> *default: 500*
+> 
+> The contig length filter is used to remove any annotated contigs less than this threshold. Annotating small contigs can lead to lower-confidence classifications. This filter is only applied to metaspades contigs.
+>
+> ***Example:*** `--length-filter 750`
 
 ### 2.3 Orchestration options
 
@@ -136,7 +146,7 @@ Each of the following arguments are optional, and do not need to be provided.
 ---  
   `--threads THREADS`   
 > **Max number of threads for each process.**  
-> *type: int*  
+> *type: integer*  
 > *default: 2*
 > 
 > Max number of threads for each process. This option is more applicable when running the pipeline with `--mode local`.  It is recommended setting this vaule to the maximum number of CPUs available on the host machine.
@@ -184,6 +194,7 @@ module load snakemake
     --output /data/$USER/metavirs_out \
     --mode slurm \
     --aggregate \
+    --length-filter 500 \
     --dry-run
 
 # Step 1B.) Run the viral metagenomics
@@ -195,7 +206,8 @@ module load snakemake
 ./metavirs run --input .tests/*.gz \
     --output /data/$USER/metavirs_out \
     --mode slurm \
-    --aggregate
+    --aggregate \
+    --length-filter 500
 ```
 
 ### 3.2 BigSky
@@ -207,8 +219,8 @@ srun -N 1 -n 1 --time=1:00:00 --mem=8gb --cpus-per-task=2 --pty bash
 
 # Add any missing dependencies to $PATH,
 # adds singularity, snakemake, and metavirs
+module purge
 source /gs1/RTS/OpenOmics/bin/dependencies.sh
-
 
 # Step 1A.) Dry-run the pipeline,
 # this will display what steps will 
@@ -219,6 +231,7 @@ metavirs run --input .tests/*.gz \
     --sif-cache /gs1/RTS/OpenOmics/SIFs/ \
     --resource-bundle /gs1/RTS/OpenOmics/references/metavirs/ \
     --aggregate \
+    --length-filter 500 \
     --dry-run
 
 # Step 1B.) Run the viral metagenomics
@@ -232,5 +245,6 @@ metavirs run --input .tests/*.gz \
     --mode slurm \
     --sif-cache /gs1/RTS/OpenOmics/SIFs/ \
     --resource-bundle /gs1/RTS/OpenOmics/references/metavirs/ \
-    --aggregate
+    --aggregate \
+    --length-filter 500
 ```
