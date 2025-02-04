@@ -216,21 +216,23 @@ def main():
 
     with open(args.output, 'w') as ofh:
         # Add header to output file
-        ofh.write("{0}\n".format('\t'.join([args.collapse_on_taxa] + collapse_features)))
+        ofh.write("{0}\tncontig\n".format('\t'.join([args.collapse_on_taxa] + collapse_features)))
         for taxa_name, aggr_features in taxa_idx.items():
             collapsed_contigs = ','.join(aggr_features['contig'])        # concat string
+            num_contigs = len(aggr_features['contig'])                   # count concat contigs
             collapsed_taxids  = ','.join(aggr_features['taxid'])         # concat string
             sum_count = sum([ int(c) for c in aggr_features['count'] ])  # summate counts
             sum_cov   = sum([ float(c) for c in aggr_features['cov'] ])  # summate cov values
             # Write collapse taxa information
             # to the output file
             ofh.write(
-                "{0}\t{1}\t{2}\t{3}\t{4}\n".format(
+                "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(
                     taxa_name,
                     sum_cov,
                     sum_count,
                     collapsed_taxids,
-                    collapsed_contigs
+                    collapsed_contigs,
+                    num_contigs
                 )
             )
 
