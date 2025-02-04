@@ -50,7 +50,7 @@ rule all:
     input:
         # FastQValidator, only runs if Snakemake is 
         # invoked with the --use-singularity option
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","rawQC","{name}.validated.R1.fastq.log"), 
             name=provided(samples, wf_api.use_singularity)
@@ -67,7 +67,7 @@ rule all:
             name=samples
         ),
         # FastQC (before and after trimming)
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","rawQC","{name}.R1_fastqc.zip"), 
             name=samples
@@ -77,19 +77,19 @@ rule all:
             name=samples
         ),
         # Cutadapt, remove adapter sequences
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","trim","{name}.R1.trim.fastq"), 
             name=samples
         ),
         # Remove Host contamination
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","trim","{name}.R1.trim.host_removed.fastq.gz"), 
             name=samples
         ),
         # Kraken2, viral taxonomic classification
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","kraken2","{name}.reads.krona.html"), 
             name=samples
@@ -98,13 +98,13 @@ rule all:
         # conditional runs with pair-end samples,
         # metaspades does NOT support single-end,
         # https://github.com/ablab/spades/discussions/1026
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","output","{name}.metaspades.bam"), 
             name=pe_samples
         ),
         # Megahit, viral assembly, annotation, and alignment to contigs
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","output","{name}.megahit.bam"), 
             name=samples
@@ -113,7 +113,7 @@ rule all:
         # conditional runs with pair-end samples,
         # metaspades does NOT support single-end,
         # https://github.com/ablab/spades/discussions/1026
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","output","{name}.metaspades_blast.tsv"), 
             name=pe_samples
@@ -123,14 +123,14 @@ rule all:
             pe_samples
         ),
         # BLAST Megahit contigs against nt virsuses database,
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","output","{name}.megahit_blast.tsv"), 
             name=samples
         ),
         join(workpath,"Project","megahit_blast.xlsx"),
         # Krona, taxonomic classification report
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"{name}","output","{name}.contig.classification.html"),
             name=samples
@@ -145,7 +145,7 @@ rule all:
             name=samples
         ),
         # Krona, project-level multi-sample report
-        # @imported from rules/paired-end.smk
+        # @imported from rules/metavirs.smk
         expand(
             join(workpath,"Project","temp","{name}.megahit.contigs.CAT.krona.meta"),
             name=provided(samples, do_aggregate),
@@ -153,4 +153,11 @@ rule all:
         provided(
             [join(workpath,"Project","Project.contig.classification.html")],
             do_aggregate
-        )
+        ),
+        # Project-level family, genus, species viral matrices
+        # of counts, coverage, contig IDs, and number of contigs
+        join(workpath,"Project","megahit.kraken2_viraltable.family-level.counts.tsv"),
+        provided(
+            [join(workpath,"Project","metaspades.kraken2_viraltable.family-level.counts.tsv")],
+            pe_samples
+        ),
