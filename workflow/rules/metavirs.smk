@@ -1551,7 +1551,7 @@ rule aggregate_metaspades_viraltable:
         rname='aggrmetaspadestable',
         script=join(workpath, "workflow", "scripts", "create_matrix.py"),
     threads: int(allocated("threads", "aggregate_metaspades_viraltable", cluster))
-    container: config['images']['metavirs']
+    container: config['images']['blast']
     shell: """
     # Create family-level viral matrices
     # Family-level counts
@@ -1719,7 +1719,7 @@ rule aggregate_megahit_viraltable:
         rname='aggrmegahittable',
         script=join(workpath, "workflow", "scripts", "create_matrix.py"),
     threads: int(allocated("threads", "aggregate_megahit_viraltable", cluster))
-    container: config['images']['metavirs']
+    container: config['images']['blast']
     shell: """
     # Create family-level viral matrices
     # Family-level counts
