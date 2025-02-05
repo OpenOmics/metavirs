@@ -156,8 +156,8 @@ rule all:
         ),
         # Project-level family, genus, species viral matrices
         # of counts, coverage, contig IDs, and number of contigs
-        join(workpath,"Project","megahit.kraken2_viraltable.family-level.counts.tsv"),
+        join(workpath,"Project","megahit.family-level.kraken2_viraltable.xlsx"),
         provided(
-            [join(workpath,"Project","metaspades.kraken2_viraltable.family-level.counts.tsv")],
+            [join(workpath,"Project","metaspades.family-level.kraken2_viraltable.xlsx"),],
             pe_samples
         ),

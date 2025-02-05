@@ -1532,30 +1532,34 @@ rule aggregate_metaspades_viraltable:
         kraken_genus   = expand(join(workpath,"{name}","output","{name}.metaspades_kraken2_filtered_viraltable.genus-level.tsv"), name=samples),
         kraken_species = expand(join(workpath,"{name}","output","{name}.metaspades_kraken2_filtered_viraltable.species-level.tsv"), name=samples),
     output:
-        kfamily_counts    = join(workpath,"Project","metaspades.kraken2_viraltable.family-level.counts.tsv"),
-        kfamily_cov       = join(workpath,"Project","metaspades.kraken2_viraltable.family-level.coverage.tsv"),
-        kfamily_taxid     = join(workpath,"Project","metaspades.kraken2_viraltable.family-level.taxonIDs.tsv"),
-        kfamily_contigs   = join(workpath,"Project","metaspades.kraken2_viraltable.family-level.contigIDs.tsv"),
-        kfamily_ncontigs  = join(workpath,"Project","metaspades.kraken2_viraltable.family-level.numContigs.tsv"),
-        kgenus_counts     = join(workpath,"Project","metaspades.kraken2_viraltable.genus-level.counts.tsv"),
-        kgenus_cov        = join(workpath,"Project","metaspades.kraken2_viraltable.genus-level.coverage.tsv"),
-        kgenus_taxid      = join(workpath,"Project","metaspades.kraken2_viraltable.genus-level.taxonIDs.tsv"),
-        kgenus_contigs    = join(workpath,"Project","metaspades.kraken2_viraltable.genus-level.contigIDs.tsv"),
-        kgenus_ncontigs   = join(workpath,"Project","metaspades.kraken2_viraltable.genus-level.numContigs.tsv"),
-        kspecies_counts   = join(workpath,"Project","metaspades.kraken2_viraltable.species-level.counts.tsv"),
-        kspecies_cov      = join(workpath,"Project","metaspades.kraken2_viraltable.species-level.coverage.tsv"),
-        kspecies_taxid    = join(workpath,"Project","metaspades.kraken2_viraltable.species-level.taxonIDs.tsv"),
-        kspecies_contigs  = join(workpath,"Project","metaspades.kraken2_viraltable.species-level.contigIDs.tsv"),
-        kspecies_ncontigs = join(workpath,"Project","metaspades.kraken2_viraltable.species-level.numContigs.tsv"),
+        kfamily_counts    = join(workpath,"Project","temp","metaspades","family-level.counts.kraken2_viraltable.tsv"),
+        kfamily_cov       = join(workpath,"Project","temp","metaspades","family-level.coverage.kraken2_viraltable.tsv"),
+        kfamily_taxid     = join(workpath,"Project","temp","metaspades","family-level.taxonIDs.kraken2_viraltable.tsv"),
+        kfamily_contigs   = join(workpath,"Project","temp","metaspades","family-level.contigIDs.kraken2_viraltable.tsv"),
+        kfamily_ncontigs  = join(workpath,"Project","temp","metaspades","family-level.numContigs.kraken2_viraltable.tsv"),
+        kfamily_xlsx      = join(workpath,"Project","metaspades.family-level.kraken2_viraltable.xlsx"),
+        kgenus_counts     = join(workpath,"Project","temp","metaspades","genus-level.counts.kraken2_viraltable.tsv"),
+        kgenus_cov        = join(workpath,"Project","temp","metaspades","genus-level.coverage.kraken2_viraltable.tsv"),
+        kgenus_taxid      = join(workpath,"Project","temp","metaspades","genus-level.taxonIDs.kraken2_viraltable.tsv"),
+        kgenus_contigs    = join(workpath,"Project","temp","metaspades","genus-level.contigIDs.kraken2_viraltable.tsv"),
+        kgenus_ncontigs   = join(workpath,"Project","temp","metaspades","genus-level.numContigs.kraken2_viraltable.tsv"),
+        kgenus_xlsx       = join(workpath,"Project","metaspades.genus-level.kraken2_viraltable.xlsx"),
+        kspecies_counts   = join(workpath,"Project","temp","metaspades","species-level.counts.kraken2_viraltable.tsv"),
+        kspecies_cov      = join(workpath,"Project","temp","metaspades","species-level.coverage.kraken2_viraltable.tsv"),
+        kspecies_taxid    = join(workpath,"Project","temp","metaspades","species-level.taxonIDs.kraken2_viraltable.tsv"),
+        kspecies_contigs  = join(workpath,"Project","temp","metaspades","species-level.contigIDs.kraken2_viraltable.tsv"),
+        kspecies_ncontigs = join(workpath,"Project","temp","metaspades","species-level.numContigs.kraken2_viraltable.tsv"),
+        kspecies_xlsx     = join(workpath,"Project","metaspades.species-level.kraken2_viraltable.xlsx"),
     params:
         rname='aggrmetaspadestable',
-        script=join(workpath, "workflow", "scripts", "create_matrix.py"),
+        mtrx_script=join(workpath, "workflow", "scripts", "create_matrix.py"),
+        xlsx_script=join(workpath, "workflow", "scripts", "files2spreadsheet.py"),
     threads: int(allocated("threads", "aggregate_metaspades_viraltable", cluster))
     container: config['images']['blast']
     shell: """
     # Create family-level viral matrices
     # Family-level counts
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_counts} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.family-level.tsv' \\
@@ -1563,7 +1567,7 @@ rule aggregate_metaspades_viraltable:
         --join-on family \\
         --extract count
     # Family-level coverage
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_cov} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.family-level.tsv' \\
@@ -1571,7 +1575,7 @@ rule aggregate_metaspades_viraltable:
         --join-on family \\
         --extract cov
     # Family-level taxon IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_taxid} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.family-level.tsv' \\
@@ -1579,7 +1583,7 @@ rule aggregate_metaspades_viraltable:
         --join-on family \\
         --extract taxid
     # Family-level contig IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_contigs} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.family-level.tsv' \\
@@ -1587,17 +1591,24 @@ rule aggregate_metaspades_viraltable:
         --join-on family \\
         --extract contig
     # Family-level number of contigs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_ncontigs} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.family-level.tsv' \\
         --nan-values 0 \\
         --join-on family \\
         --extract ncontig
+    # Create family-level excel spreadsheet,
+    # with sheet for counts, coverage, taxon IDs,
+    # contig IDs, and the number of contigs
+    python3 {params.xlsx_script} -a \\
+        --input {output.kfamily_counts} {output.kfamily_cov} {output.kfamily_taxid} {output.kfamily_contigs} {output.kfamily_ncontigs} \\
+        --output {output.kfamily_xlsx} \\
+        --rm-suffix '.kraken2_viraltable.tsv'
 
     # Create genus-level viral matrices
     # Genus-level counts
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_counts} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.genus-level.tsv' \\
@@ -1605,7 +1616,7 @@ rule aggregate_metaspades_viraltable:
         --join-on genus \\
         --extract count
     # Genus-level coverage
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_cov} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.genus-level.tsv' \\
@@ -1613,7 +1624,7 @@ rule aggregate_metaspades_viraltable:
         --join-on genus \\
         --extract cov
     # Genus-level taxon IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_taxid} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.genus-level.tsv' \\
@@ -1621,7 +1632,7 @@ rule aggregate_metaspades_viraltable:
         --join-on genus \\
         --extract taxid
     # Genus-level contig IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_contigs} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.genus-level.tsv' \\
@@ -1629,17 +1640,24 @@ rule aggregate_metaspades_viraltable:
         --join-on genus \\
         --extract contig
     # Genus-level number of contigs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_ncontigs} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.genus-level.tsv' \\
         --nan-values 0 \\
         --join-on genus \\
         --extract ncontig
+    # Create genus-level excel spreadsheet,
+    # with sheet for counts, coverage, taxon IDs,
+    # contig IDs, and the number of contigs
+    python3 {params.xlsx_script} -a \\
+        --input {output.kgenus_counts} {output.kgenus_cov} {output.kgenus_taxid} {output.kgenus_contigs} {output.kgenus_ncontigs} \\
+        --output {output.kgenus_xlsx} \\
+        --rm-suffix '.kraken2_viraltable.tsv'
 
     # Create species-level viral matrices
     # Species-level counts
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_counts} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.species-level.tsv' \\
@@ -1647,7 +1665,7 @@ rule aggregate_metaspades_viraltable:
         --join-on species \\
         --extract count
     # Species-level coverage
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_cov} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.species-level.tsv' \\
@@ -1655,7 +1673,7 @@ rule aggregate_metaspades_viraltable:
         --join-on species \\
         --extract cov
     # Species-level taxon IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_taxid} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.species-level.tsv' \\
@@ -1663,7 +1681,7 @@ rule aggregate_metaspades_viraltable:
         --join-on species \\
         --extract taxid
     # Species-level contig IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_contigs} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.species-level.tsv' \\
@@ -1671,13 +1689,20 @@ rule aggregate_metaspades_viraltable:
         --join-on species \\
         --extract contig
     # Species-level number of contigs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_ncontigs} \\
         --clean-suffix '.metaspades_kraken2_filtered_viraltable.species-level.tsv' \\
         --nan-values 0 \\
         --join-on species \\
         --extract ncontig
+    # Create species-level excel spreadsheet,
+    # with sheet for counts, coverage, taxon IDs,
+    # contig IDs, and the number of contigs
+    python3 {params.xlsx_script} -a \\
+        --input {output.kspecies_counts} {output.kspecies_cov} {output.kspecies_taxid} {output.kspecies_contigs} {output.kspecies_ncontigs} \\
+        --output {output.kspecies_xlsx} \\
+        --rm-suffix '.kraken2_viraltable.tsv'
     """
 
 
@@ -1700,30 +1725,34 @@ rule aggregate_megahit_viraltable:
         kraken_genus   = expand(join(workpath,"{name}","output","{name}.megahit_kraken2_filtered_viraltable.genus-level.tsv"), name=samples),
         kraken_species = expand(join(workpath,"{name}","output","{name}.megahit_kraken2_filtered_viraltable.species-level.tsv"), name=samples),
     output:
-        kfamily_counts    = join(workpath,"Project","megahit.kraken2_viraltable.family-level.counts.tsv"),
-        kfamily_cov       = join(workpath,"Project","megahit.kraken2_viraltable.family-level.coverage.tsv"),
-        kfamily_taxid     = join(workpath,"Project","megahit.kraken2_viraltable.family-level.taxonIDs.tsv"),
-        kfamily_contigs   = join(workpath,"Project","megahit.kraken2_viraltable.family-level.contigIDs.tsv"),
-        kfamily_ncontigs  = join(workpath,"Project","megahit.kraken2_viraltable.family-level.numContigs.tsv"),
-        kgenus_counts     = join(workpath,"Project","megahit.kraken2_viraltable.genus-level.counts.tsv"),
-        kgenus_cov        = join(workpath,"Project","megahit.kraken2_viraltable.genus-level.coverage.tsv"),
-        kgenus_taxid      = join(workpath,"Project","megahit.kraken2_viraltable.genus-level.taxonIDs.tsv"),
-        kgenus_contigs    = join(workpath,"Project","megahit.kraken2_viraltable.genus-level.contigIDs.tsv"),
-        kgenus_ncontigs   = join(workpath,"Project","megahit.kraken2_viraltable.genus-level.numContigs.tsv"),
-        kspecies_counts   = join(workpath,"Project","megahit.kraken2_viraltable.species-level.counts.tsv"),
-        kspecies_cov      = join(workpath,"Project","megahit.kraken2_viraltable.species-level.coverage.tsv"),
-        kspecies_taxid    = join(workpath,"Project","megahit.kraken2_viraltable.species-level.taxonIDs.tsv"),
-        kspecies_contigs  = join(workpath,"Project","megahit.kraken2_viraltable.species-level.contigIDs.tsv"),
-        kspecies_ncontigs = join(workpath,"Project","megahit.kraken2_viraltable.species-level.numContigs.tsv"),
+        kfamily_counts    = join(workpath,"Project","temp","megahit","family-level.counts.kraken2_viraltable.tsv"),
+        kfamily_cov       = join(workpath,"Project","temp","megahit","family-level.coverage.kraken2_viraltable.tsv"),
+        kfamily_taxid     = join(workpath,"Project","temp","megahit","family-level.taxonIDs.kraken2_viraltable.tsv"),
+        kfamily_contigs   = join(workpath,"Project","temp","megahit","family-level.contigIDs.kraken2_viraltable.tsv"),
+        kfamily_ncontigs  = join(workpath,"Project","temp","megahit","family-level.numContigs.kraken2_viraltable.tsv"),
+        kfamily_xlsx      = join(workpath,"Project","megahit.family-level.kraken2_viraltable.xlsx"),
+        kgenus_counts     = join(workpath,"Project","temp","megahit","genus-level.counts.kraken2_viraltable.tsv"),
+        kgenus_cov        = join(workpath,"Project","temp","megahit","genus-level.coverage.kraken2_viraltable.tsv"),
+        kgenus_taxid      = join(workpath,"Project","temp","megahit","genus-level.taxonIDs.kraken2_viraltable.tsv"),
+        kgenus_contigs    = join(workpath,"Project","temp","megahit","genus-level.contigIDs.kraken2_viraltable.tsv"),
+        kgenus_ncontigs   = join(workpath,"Project","temp","megahit","genus-level.numContigs.kraken2_viraltable.tsv"),
+        kgenus_xlsx       = join(workpath,"Project","megahit.genus-level.kraken2_viraltable.xlsx"),
+        kspecies_counts   = join(workpath,"Project","temp","megahit","species-level.counts.kraken2_viraltable.tsv"),
+        kspecies_cov      = join(workpath,"Project","temp","megahit","species-level.coverage.kraken2_viraltable.tsv"),
+        kspecies_taxid    = join(workpath,"Project","temp","megahit","species-level.taxonIDs.kraken2_viraltable.tsv"),
+        kspecies_contigs  = join(workpath,"Project","temp","megahit","species-level.contigIDs.kraken2_viraltable.tsv"),
+        kspecies_ncontigs = join(workpath,"Project","temp","megahit","species-level.numContigs.kraken2_viraltable.tsv"),
+        kspecies_xlsx     = join(workpath,"Project","megahit.species-level.kraken2_viraltable.xlsx"),
     params:
         rname='aggrmegahittable',
-        script=join(workpath, "workflow", "scripts", "create_matrix.py"),
+        mtrx_script=join(workpath, "workflow", "scripts", "create_matrix.py"),
+        xlsx_script=join(workpath, "workflow", "scripts", "files2spreadsheet.py"),
     threads: int(allocated("threads", "aggregate_megahit_viraltable", cluster))
     container: config['images']['blast']
     shell: """
     # Create family-level viral matrices
     # Family-level counts
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_counts} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.family-level.tsv' \\
@@ -1731,7 +1760,7 @@ rule aggregate_megahit_viraltable:
         --join-on family \\
         --extract count
     # Family-level coverage
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_cov} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.family-level.tsv' \\
@@ -1739,7 +1768,7 @@ rule aggregate_megahit_viraltable:
         --join-on family \\
         --extract cov
     # Family-level taxon IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_taxid} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.family-level.tsv' \\
@@ -1747,7 +1776,7 @@ rule aggregate_megahit_viraltable:
         --join-on family \\
         --extract taxid
     # Family-level contig IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_contigs} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.family-level.tsv' \\
@@ -1755,17 +1784,24 @@ rule aggregate_megahit_viraltable:
         --join-on family \\
         --extract contig
     # Family-level number of contigs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_family} \\
         --output {output.kfamily_ncontigs} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.family-level.tsv' \\
         --nan-values 0 \\
         --join-on family \\
         --extract ncontig
+    # Create family-level excel spreadsheet
+    # with sheet for counts, coverage, taxon IDs,
+    # contig IDs, and the number of contigs
+    python3 {params.xlsx_script} -a \\
+        --input {output.kfamily_counts} {output.kfamily_cov} {output.kfamily_taxid} {output.kfamily_contigs} {output.kfamily_ncontigs} \\
+        --output {output.kfamily_xlsx} \\
+        --rm-suffix '.kraken2_viraltable.tsv'
 
     # Create genus-level viral matrices
     # Genus-level counts
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_counts} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.genus-level.tsv' \\
@@ -1773,7 +1809,7 @@ rule aggregate_megahit_viraltable:
         --join-on genus \\
         --extract count
     # Genus-level coverage
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_cov} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.genus-level.tsv' \\
@@ -1781,7 +1817,7 @@ rule aggregate_megahit_viraltable:
         --join-on genus \\
         --extract cov
     # Genus-level taxon IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_taxid} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.genus-level.tsv' \\
@@ -1789,7 +1825,7 @@ rule aggregate_megahit_viraltable:
         --join-on genus \\
         --extract taxid
     # Genus-level contig IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_contigs} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.genus-level.tsv' \\
@@ -1797,17 +1833,24 @@ rule aggregate_megahit_viraltable:
         --join-on genus \\
         --extract contig
     # Genus-level number of contigs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_genus} \\
         --output {output.kgenus_ncontigs} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.genus-level.tsv' \\
         --nan-values 0 \\
         --join-on genus \\
         --extract ncontig
+    # Create genus-level excel spreadsheet
+    # with sheet for counts, coverage, taxon IDs,
+    # contig IDs, and the number of contigs
+    python3 {params.xlsx_script} -a \\
+        --input {output.kgenus_counts} {output.kgenus_cov} {output.kgenus_taxid} {output.kgenus_contigs} {output.kgenus_ncontigs} \\
+        --output {output.kgenus_xlsx} \\
+        --rm-suffix '.kraken2_viraltable.tsv'
 
     # Create species-level viral matrices
     # Species-level counts
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_counts} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.species-level.tsv' \\
@@ -1815,7 +1858,7 @@ rule aggregate_megahit_viraltable:
         --join-on species \\
         --extract count
     # Species-level coverage
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_cov} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.species-level.tsv' \\
@@ -1823,7 +1866,7 @@ rule aggregate_megahit_viraltable:
         --join-on species \\
         --extract cov
     # Species-level taxon IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_taxid} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.species-level.tsv' \\
@@ -1831,7 +1874,7 @@ rule aggregate_megahit_viraltable:
         --join-on species \\
         --extract taxid
     # Species-level contig IDs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_contigs} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.species-level.tsv' \\
@@ -1839,11 +1882,18 @@ rule aggregate_megahit_viraltable:
         --join-on species \\
         --extract contig
     # Species-level number of contigs
-    python3 {params.script} \\
+    python3 {params.mtrx_script} \\
         --input {input.kraken_species} \\
         --output {output.kspecies_ncontigs} \\
         --clean-suffix '.megahit_kraken2_filtered_viraltable.species-level.tsv' \\
         --nan-values 0 \\
         --join-on species \\
         --extract ncontig
+    # Create species-level excel spreadsheet,
+    # with sheet for counts, coverage, taxon IDs,
+    # contig IDs, and the number of contigs
+    python3 {params.xlsx_script} -a \\
+        --input {output.kspecies_counts} {output.kspecies_cov} {output.kspecies_taxid} {output.kspecies_contigs} {output.kspecies_ncontigs} \\
+        --output {output.kspecies_xlsx} \\
+        --rm-suffix '.kraken2_viraltable.tsv'
     """
