@@ -121,12 +121,14 @@ def build_matrix(file, matrix_dict, join_index, parse_index, clean_suffix=None):
         if clean_suffix:
             # maybe replace with regex later
             sample = sample.split(clean_suffix)[0]   
+        # Ensures empty files with no classification
+        # are reported properly in the output file
+        if sample not in matrix_dict:
+            matrix_dict[sample] = {}
         for line in fh:
             linelist = line.lstrip().rstrip().split('\t')
             j_field = linelist[join_index]
             j_value = linelist[parse_index]
-            if sample not in matrix_dict:
-                matrix_dict[sample] = {}
             matrix_dict[sample][j_field] = j_value
     return matrix_dict
 
